@@ -1,9 +1,21 @@
 package data
 
-import "fmt"
+import (
+	"context"
+	"fmt"
 
-// SegmentNotFound is an error raised when a segment can not be found in the database
-var SegmentNotFound = fmt.Errorf("segment not found")
+	"github.com/charmbracelet/log"
+
+	"github.com/peyuaa/segmentify/db"
+)
+
+var (
+	// ErrSegmentNotFound is an error raised when a segment can not be found in the database
+	ErrSegmentNotFound = fmt.Errorf("segment not found")
+
+	// ErrSegmentAlreadyExists is an error raised when a segment already exists in the database
+	ErrSegmentAlreadyExists = fmt.Errorf("segment already exists")
+)
 
 // Segment defines the structure for an API segment
 type Segment struct {
@@ -18,6 +30,18 @@ type Segment struct {
 	// required: true
 	// max length: 255
 	Slug string `json:"slug" validate:"required"`
+}
+
+type Segments struct {
+	l  *log.Logger
+	db *db.Segmentify
+}
+
+func New(l *log.Logger, db *db.Segmentify) *Segments {
+	return &Segments{
+		l:  l,
+		db: db,
+	}
 }
 
 var segments = []Segment{
