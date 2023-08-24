@@ -68,6 +68,11 @@ func main() {
 	l.Info("Shutting down server", "signal", sig)
 
 	// gracefully shutdown the server, waiting max 30 seconds for current operations to complete
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	s.Shutdown(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err := s.Shutdown(ctx)
+	if err != nil {
+		l.Fatal("Error shutting down server", "error", err)
+	}
 }
