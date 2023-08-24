@@ -6,7 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// ValidationError wraps the validators FieldError so we do not
+// ValidationError wraps the validators FieldError, so we do not
 // expose this to out code
 type ValidationError struct {
 	validator.FieldError
@@ -65,7 +65,7 @@ func NewValidation() *Validation {
 //		}
 func (v *Validation) Validate(i interface{}) ValidationErrors {
 	// It returns InvalidValidationError for bad values passed in and nil or ValidationErrors as error otherwise.
-	// Thats why we need to check if the error is not nil
+	// That's why we need to check if the error is not nil
 	err := v.validate.Struct(i)
 	if err == nil {
 		return nil

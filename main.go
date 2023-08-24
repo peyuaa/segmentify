@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var bindAddress string = ":9090"
+var bindAddress = ":9090"
 
 func main() {
 	l := log.NewWithOptions(os.Stderr, log.Options{
@@ -38,6 +38,7 @@ func main() {
 
 	getR := sm.Methods(http.MethodGet).Subrouter()
 	getR.HandleFunc("/slugs", sh.Get)
+	getR.HandleFunc("/slugs/{id:[0-9]+}", sh.GetById)
 
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
