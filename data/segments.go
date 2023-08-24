@@ -35,14 +35,21 @@ var segments = []Segment{
 	},
 }
 
-func AddSegment(slug Segment) {
-	if len(segments) == 0 {
-		slug.ID = 1
-	} else {
-		slug.ID = segments[len(segments)-1].ID + 1
+func (s *Segments) Add(ctx context.Context, segment Segment) error {
+	exists, err := s.db.IsSegmentExists(ctx, segment.Slug)
+	if err != nil {
+		return fmt.Errorf("unable to check segment existence: %w", err)
+	}
+	if exists {
+		return ErrSegmentAlreadyExists
 	}
 
-	segments = append(segments, slug)
+	err = s.db.InsertSegment(ctx, segment.Slug)
+	if err != nil {
+		return fmt.Errorf("unable to insert segment: %w", err)
+	}
+
+	return nil
 }
 
 func GetSegments() []Segment {
@@ -56,5 +63,5 @@ func GetSegmentByID(id int) (*Segment, error) {
 		}
 	}
 
-	return nil, SegmentNotFound
+	return nil, ErrSegmentNotFound
 }

@@ -30,7 +30,7 @@ func (s *Segments) GetById(rw http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case err == nil:
-	case errors.Is(err, data.SegmentNotFound):
+	case errors.Is(err, data.ErrSegmentNotFound):
 		s.l.Warn("Unable to find slug in database", "id", id, "error", err)
 		rw.WriteHeader(http.StatusNotFound)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
