@@ -36,6 +36,9 @@ func main() {
 	postR.HandleFunc("/slugs", sh.Create)
 	postR.Use(sh.MiddlewareValidateSlug)
 
+	getR := sm.Methods(http.MethodGet).Subrouter()
+	getR.HandleFunc("/slugs", sh.Get)
+
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
 
