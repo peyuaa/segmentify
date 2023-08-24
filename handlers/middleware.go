@@ -16,7 +16,10 @@ func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 			s.l.Error("Unable to deserialize slug", "error", err)
 
 			rw.WriteHeader(http.StatusBadRequest)
-			data.ToJSON(&GenericError{Message: err.Error()}, rw)
+			err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+			if err != nil {
+				s.l.Error("Unable to serialize GenericError", "error", err)
+			}
 		}
 
 		// validate the slug
@@ -26,7 +29,10 @@ func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 
 			// return the validation messages as an array
 			rw.WriteHeader(http.StatusUnprocessableEntity)
-			data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
+			err = data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
+			if err != nil {
+				s.l.Error("Unable to serialize ValidationError", "error", err)
+			}
 			return
 		}
 

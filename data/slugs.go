@@ -1,8 +1,13 @@
 package data
 
+import "fmt"
+
+// SlugNotFound is an error raised when a slug can not be found in the database
+var SlugNotFound = fmt.Errorf("slug not found")
+
 // Slug defines the structure for an API slug
 type Slug struct {
-	// the if for the slug
+	// the id for the slug
 	//
 	// required: false
 	// min: 1
@@ -15,7 +20,7 @@ type Slug struct {
 	Name string `json:"name" validate:"required"`
 }
 
-var slugs []Slug = []Slug{
+var slugs = []Slug{
 	{
 		ID:   1,
 		Name: "AVITO_VOICE_MESSAGES",
@@ -38,4 +43,18 @@ func AddSlug(slug Slug) {
 	}
 
 	slugs = append(slugs, slug)
+}
+
+func GetSlugs() []Slug {
+	return slugs
+}
+
+func GetSlugByID(id int) (*Slug, error) {
+	for _, slug := range slugs {
+		if slug.ID == id {
+			return &slug, nil
+		}
+	}
+
+	return nil, SlugNotFound
 }

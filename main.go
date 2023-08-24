@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var bindAddress string = ":9090"
+var bindAddress = ":9090"
 
 func main() {
 	l := log.NewWithOptions(os.Stderr, log.Options{
@@ -35,6 +35,10 @@ func main() {
 	postR := sm.Methods(http.MethodPost).Subrouter()
 	postR.HandleFunc("/slugs", sh.Create)
 	postR.Use(sh.MiddlewareValidateSlug)
+
+	getR := sm.Methods(http.MethodGet).Subrouter()
+	getR.HandleFunc("/slugs", sh.Get)
+	getR.HandleFunc("/slugs/{id:[0-9]+}", sh.GetById)
 
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
@@ -56,7 +60,7 @@ func main() {
 		l.Fatal("Error form server", "error", s.ListenAndServe())
 	}()
 
-	// trap interupt and gracefully shutdown the server
+	// trap interrupt and gracefully shutdown the server
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
@@ -65,6 +69,11 @@ func main() {
 	l.Info("Shutting down server", "signal", sig)
 
 	// gracefully shutdown the server, waiting max 30 seconds for current operations to complete
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	s.Shutdown(ctx)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err := s.Shutdown(ctx)
+	if err != nil {
+		l.Fatal("Error shutting down server", "error", err)
+	}
 }
