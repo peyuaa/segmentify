@@ -20,7 +20,7 @@ type Slug struct {
 	Name string `json:"name" validate:"required"`
 }
 
-var slugs []Slug = []Slug{
+var slugs = []Slug{
 	{
 		ID:   1,
 		Name: "AVITO_VOICE_MESSAGES",

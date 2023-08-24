@@ -26,7 +26,7 @@ type ValidationErrors []ValidationError
 
 // Errors converts the slice into a string slice
 func (v ValidationErrors) Errors() []string {
-	errs := []string{}
+	var errs []string
 	for _, err := range v {
 		errs = append(errs, err.Error())
 	}

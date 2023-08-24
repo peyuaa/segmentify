@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *Slugs) Get(rw http.ResponseWriter, r *http.Request) {
+func (s *Slugs) Get(rw http.ResponseWriter, _ *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
 	slugs := data.GetSlugs()
@@ -32,12 +32,18 @@ func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
 	case data.SlugNotFound:
 		s.l.Warn("Unable to find slug in database", "id", id, "error", err)
 		rw.WriteHeader(http.StatusNotFound)
-		data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		if err != nil {
+			s.l.Error("Unable to marshal json", "error", err)
+		}
 		return
 	default:
 		s.l.Error("Error retrieving slug from the database", "error", err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		if err != nil {
+			s.l.Error("Unable to marshal json", "error", err)
+		}
 		return
 	}
 
