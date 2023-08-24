@@ -13,7 +13,7 @@ import (
 func (s *Slugs) Get(rw http.ResponseWriter, _ *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
-	slugs := data.GetSlugs()
+	slugs := data.GetSegments()
 
 	err := data.ToJSON(slugs, rw)
 	if err != nil {
@@ -26,11 +26,11 @@ func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
 
 	id := s.getId(r)
 
-	slug, err := data.GetSlugByID(id)
+	slug, err := data.GetSegmentByID(id)
 
 	switch {
 	case err == nil:
-	case errors.Is(err, data.SlugNotFound):
+	case errors.Is(err, data.SegmentNotFound):
 		s.l.Warn("Unable to find slug in database", "id", id, "error", err)
 		rw.WriteHeader(http.StatusNotFound)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)

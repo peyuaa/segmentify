@@ -18,7 +18,7 @@ func NewSlugs(l *log.Logger, v *data.Validation) *Slugs {
 	}
 }
 
-// KeySlug is a key used for the Slug object in the context
+// KeySlug is a key used for the Segment object in the context
 type KeySlug struct{}
 
 // GenericError is a generic error message returned by a server

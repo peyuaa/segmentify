@@ -8,8 +8,8 @@ import (
 
 func (s *Slugs) Create(_ http.ResponseWriter, r *http.Request) {
 	// fetch the slug from the context
-	slug := r.Context().Value(KeySlug{}).(data.Slug)
+	slug := r.Context().Value(KeySlug{}).(data.Segment)
 
 	s.l.Debug("Inserting slug", "slug", slug)
-	data.AddSlug(slug)
+	data.AddSegment(slug)
 }

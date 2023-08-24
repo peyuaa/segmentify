@@ -9,7 +9,7 @@ import (
 
 func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		slug := data.Slug{}
+		slug := data.Segment{}
 
 		err := data.FromJSON(&slug, r.Body)
 		if err != nil {

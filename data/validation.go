@@ -13,6 +13,7 @@ type ValidationError struct {
 	validator.FieldError
 }
 
+// Error returns the validation error message
 func (v ValidationError) Error() string {
 	return fmt.Sprintf(
 		"Key: '%s' Error: Field validation for '%s' failed on the '%s' tag",
