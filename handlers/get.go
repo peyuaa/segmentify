@@ -30,7 +30,7 @@ func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 	case data.SlugNotFound:
-		s.l.Warn("Unable to find slug in database", "error", err)
+		s.l.Warn("Unable to find slug in database", "id", id, "error", err)
 		rw.WriteHeader(http.StatusNotFound)
 		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
