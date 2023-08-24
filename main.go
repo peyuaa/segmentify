@@ -59,7 +59,7 @@ func main() {
 		l.Fatal("Error form server", "error", s.ListenAndServe())
 	}()
 
-	// trap interupt and gracefully shutdown the server
+	// trap interrupt and gracefully shutdown the server
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
