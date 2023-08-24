@@ -7,13 +7,13 @@ import (
 	"github.com/peyuaa/segmentify/data"
 )
 
-func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
+func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		slug := data.Segment{}
+		segment := data.Segment{}
 
-		err := data.FromJSON(&slug, r.Body)
+		err := data.FromJSON(&segment, r.Body)
 		if err != nil {
-			s.l.Error("Unable to deserialize slug", "error", err)
+			s.l.Error("Unable to deserialize segment", "error", err)
 
 			rw.WriteHeader(http.StatusBadRequest)
 			err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
@@ -22,10 +22,10 @@ func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 			}
 		}
 
-		// validate the slug
-		errs := s.v.Validate(slug)
+		// validate the segment
+		errs := s.v.Validate(segment)
 		if len(errs) != 0 {
-			s.l.Error("Unable to validate slug", "error", errs)
+			s.l.Error("Unable to validate segment", "error", errs)
 
 			// return the validation messages as an array
 			rw.WriteHeader(http.StatusUnprocessableEntity)
@@ -36,8 +36,8 @@ func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 			return
 		}
 
-		// add the slug to the context
-		ctx := context.WithValue(r.Context(), KeySlug{}, slug)
+		// add the segment to the context
+		ctx := context.WithValue(r.Context(), KeySegment{}, segment)
 		r = r.WithContext(ctx)
 
 		// Call the next handler, which can be another middleware in the chain, or the final handler.

@@ -6,10 +6,10 @@ import (
 	"github.com/peyuaa/segmentify/data"
 )
 
-func (s *Slugs) Create(_ http.ResponseWriter, r *http.Request) {
-	// fetch the slug from the context
-	slug := r.Context().Value(KeySlug{}).(data.Segment)
+func (s *Segments) Create(_ http.ResponseWriter, r *http.Request) {
+	// fetch the segment from the context
+	segment := r.Context().Value(KeySegment{}).(data.Segment)
 
-	s.l.Debug("Inserting slug", "slug", slug)
-	data.AddSegment(slug)
+	s.l.Debug("Inserting segment", "segment", segment)
+	data.AddSegment(segment)
 }

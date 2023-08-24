@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *Slugs) Get(rw http.ResponseWriter, _ *http.Request) {
+func (s *Segments) Get(rw http.ResponseWriter, _ *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
 	slugs := data.GetSegments()
@@ -21,7 +21,7 @@ func (s *Slugs) Get(rw http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
+func (s *Segments) GetById(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
 	id := s.getId(r)
@@ -58,7 +58,7 @@ func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
 // Log error if func cannot convert the id into an integer
 // this should never happen as the router ensures that
 // this is a valid number
-func (s *Slugs) getId(r *http.Request) int {
+func (s *Segments) getId(r *http.Request) int {
 	// parse the product id from the url
 	vars := mux.Vars(r)
 

@@ -26,19 +26,19 @@ func main() {
 	v := data.NewValidation()
 
 	// create the handlers
-	sh := handlers.NewSlugs(l, v)
+	sh := handlers.NewSegments(l, v)
 
 	// create a new serve mux and register the handlers
 	sm := mux.NewRouter()
 
 	// handlers for API
 	postR := sm.Methods(http.MethodPost).Subrouter()
-	postR.HandleFunc("/slugs", sh.Create)
-	postR.Use(sh.MiddlewareValidateSlug)
+	postR.HandleFunc("/segments", sh.Create)
+	postR.Use(sh.MiddlewareValidateSegment)
 
 	getR := sm.Methods(http.MethodGet).Subrouter()
-	getR.HandleFunc("/slugs", sh.Get)
-	getR.HandleFunc("/slugs/{id:[0-9]+}", sh.GetById)
+	getR.HandleFunc("/segments", sh.Get)
+	getR.HandleFunc("/segments/{id:[0-9]+}", sh.GetById)
 
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))

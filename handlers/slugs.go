@@ -6,20 +6,20 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type Slugs struct {
+type Segments struct {
 	l *log.Logger
 	v *data.Validation
 }
 
-func NewSlugs(l *log.Logger, v *data.Validation) *Slugs {
-	return &Slugs{
+func NewSegments(l *log.Logger, v *data.Validation) *Segments {
+	return &Segments{
 		l: l,
 		v: v,
 	}
 }
 
-// KeySlug is a key used for the Segment object in the context
-type KeySlug struct{}
+// KeySegment is a key used for the Segment object in the context
+type KeySegment struct{}
 
 // GenericError is a generic error message returned by a server
 type GenericError struct {
