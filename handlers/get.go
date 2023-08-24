@@ -48,7 +48,7 @@ func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
 }
 
 // getId returns the slug id from the url
-// Log if cannot convert the id into an integer
+// Log error if func cannot convert the id into an integer
 // this should never happen as the router ensures that
 // this is a valid number
 func (s *Slugs) getId(r *http.Request) int {

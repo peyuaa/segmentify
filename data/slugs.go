@@ -3,11 +3,11 @@ package data
 import "fmt"
 
 // SlugNotFound is an error raised when a slug can not be found in the database
-var SlugNotFound = fmt.Errorf("Slug not found")
+var SlugNotFound = fmt.Errorf("slug not found")
 
 // Slug defines the structure for an API slug
 type Slug struct {
-	// the if for the slug
+	// the id for the slug
 	//
 	// required: false
 	// min: 1
