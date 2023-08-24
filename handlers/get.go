@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -27,9 +28,9 @@ func (s *Slugs) GetById(rw http.ResponseWriter, r *http.Request) {
 
 	slug, err := data.GetSlugByID(id)
 
-	switch err {
-	case nil:
-	case data.SlugNotFound:
+	switch {
+	case err == nil:
+	case errors.Is(err, data.SlugNotFound):
 		s.l.Warn("Unable to find slug in database", "id", id, "error", err)
 		rw.WriteHeader(http.StatusNotFound)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)

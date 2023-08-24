@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
@@ -72,7 +73,8 @@ func (v *Validation) Validate(i interface{}) ValidationErrors {
 	}
 
 	// Error could be not nil but still have 0 errors
-	errs := err.(validator.ValidationErrors)
+	var errs validator.ValidationErrors
+	errors.As(err, &errs)
 	if len(errs) == 0 {
 		return nil
 	}
