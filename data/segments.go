@@ -23,7 +23,7 @@ type Segment struct {
 	ID int `json:"id"` // Unique identifier for the segment
 
 	// the segment's slug
-	Slug string `json:"slug" validate:"required"`
+	Slug string `json:"slug" validate:"required,min=5,max=50"`
 
 	// is the segment deleted
 	IsDeleted bool `json:"is_deleted"`

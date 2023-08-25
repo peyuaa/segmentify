@@ -72,8 +72,13 @@ func main() {
 
 	// handlers for API
 	postR := sm.Methods(http.MethodPost).Subrouter()
-	postR.HandleFunc("/segments", sh.Create)
-	postR.Use(sh.MiddlewareValidateSegment)
+	segR := postR.Path("/segments").Subrouter()
+	segR.HandleFunc("", sh.CreateSegment)
+	segR.Use(sh.MiddlewareValidateSegment)
+
+	userR := postR.Path("/segments/users").Subrouter()
+	userR.HandleFunc("", sh.ChangeUsersSegments)
+	userR.Use(sh.MiddlewareValidateUser)
 
 	getR := sm.Methods(http.MethodGet).Subrouter()
 	getR.HandleFunc("/segments", sh.Get)

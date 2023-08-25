@@ -25,8 +25,6 @@ func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 		// validate the segment
 		errs := s.v.Validate(segment)
 		if len(errs) != 0 {
-			s.l.Error("Unable to validate segment", "error", errs)
-
 			// return the validation messages as an array
 			rw.WriteHeader(http.StatusUnprocessableEntity)
 			err = data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
@@ -38,6 +36,39 @@ func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 
 		// add the segment to the context
 		ctx := context.WithValue(r.Context(), KeySegment{}, segment)
+		r = r.WithContext(ctx)
+
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func (s *Segments) MiddlewareValidateUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		user := data.UserSegments{}
+
+		err := data.FromJSON(&user, r.Body)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+			if err != nil {
+				s.l.Error("Unable to serialize GenericError", "error", err)
+			}
+		}
+
+		errs := s.v.Validate(user)
+		if len(errs) != 0 {
+			// return the validation messages as an array
+			rw.WriteHeader(http.StatusUnprocessableEntity)
+			err = data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
+			if err != nil {
+				s.l.Error("Unable to serialize ValidationError", "error", err)
+			}
+			return
+		}
+
+		// add the request object to the context
+		ctx := context.WithValue(r.Context(), KeyUserSegments{}, user)
 		r = r.WithContext(ctx)
 
 		// Call the next handler, which can be another middleware in the chain, or the final handler.

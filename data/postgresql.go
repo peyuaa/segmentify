@@ -124,3 +124,44 @@ func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
 
 	return nil
 }
+
+// addSegmentsToUser add segments to user in one transaction
+func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, userID int, segments []SegmentAdd) (err error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("unable to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			rollErr := tx.Rollback()
+			if rollErr != nil {
+				s.l.Error("Unable to rollback transaction", "error", rollErr)
+			}
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
+			err = fmt.Errorf("unable to commit transaction: %w", err)
+		}
+	}()
+
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO users_segments (user_id, slug, expiration_date) VALUES ($1, $2, $3)")
+	if err != nil {
+		return fmt.Errorf("unable to prepare statement: %w", err)
+	}
+	defer func() {
+		stmtErr := stmt.Close()
+		if stmtErr != nil {
+			s.l.Error("Unable to close statement", "error", stmtErr)
+		}
+	}()
+
+	for _, segment := range segments {
+		_, err := stmt.ExecContext(ctx, userID, segment.Slug, segment.Expired)
+		if err != nil {
+			return fmt.Errorf("unable to execute query: %w", err)
+		}
+	}
+
+	return nil
+}
