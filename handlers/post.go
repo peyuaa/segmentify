@@ -28,6 +28,4 @@ func (s *Segments) Create(rw http.ResponseWriter, r *http.Request) {
 		s.l.Error("Unable to insert segment", "error", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 	}
-
-	return
 }
