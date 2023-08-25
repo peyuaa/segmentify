@@ -70,18 +70,6 @@ func (s *SegmentifyDB) GetSegments(ctx context.Context) (Segments, error) {
 	return segments, nil
 }
 
-func (s *SegmentifyDB) GetSegmentByID(ctx context.Context, id int) (Segment, error) {
-	segment, err := s.selectSegmentByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return segment, ErrSegmentNotFound
-		}
-		return segment, fmt.Errorf("unable to get segment by id: %w", err)
-	}
-
-	return segment, nil
-}
-
 func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (Segment, error) {
 	segment, err := s.selectSegmentBySlug(ctx, slug)
 	if err != nil {

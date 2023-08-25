@@ -34,31 +34,6 @@ func (s *SegmentifyDB) selectSegments(ctx context.Context) (Segments, error) {
 	return segments, nil
 }
 
-// selectSegmentByID returns a segment with given id from the database
-func (s *SegmentifyDB) selectSegmentByID(ctx context.Context, id int) (Segment, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return Segment{}, fmt.Errorf("unable to begin transaction: %w", err)
-	}
-
-	var segment Segment
-	err = tx.QueryRowContext(ctx, "SELECT id, slug, is_deleted FROM segments WHERE id = $1", id).
-		Scan(&segment.ID, &segment.Slug, &segment.IsDeleted)
-	if err != nil {
-		rollErr := tx.Rollback()
-		if rollErr != nil {
-			s.l.Error("Unable to rollback transaction", "error", rollErr)
-		}
-		return Segment{}, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return Segment{}, fmt.Errorf("unable to commit transaction: %w", err)
-	}
-
-	return segment, nil
-}
-
 func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (Segment, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {

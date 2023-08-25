@@ -30,39 +30,6 @@ func (s *Segments) Get(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Segments) GetById(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Add("Content-Type", "application/json")
-
-	id := s.getId(r)
-
-	segment, err := s.d.GetSegmentByID(r.Context(), id)
-
-	switch {
-	case err == nil:
-	case errors.Is(err, data.ErrSegmentNotFound):
-		s.l.Warn("Unable to find segment in database", "id", id, "error", err)
-		rw.WriteHeader(http.StatusNotFound)
-		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
-		if err != nil {
-			s.l.Error("Unable to marshal json", "error", err)
-		}
-		return
-	default:
-		s.l.Error("Error retrieving segment from the database", "error", err)
-		rw.WriteHeader(http.StatusInternalServerError)
-		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
-		if err != nil {
-			s.l.Error("Unable to marshal json", "error", err)
-		}
-		return
-	}
-
-	err = data.ToJSON(segment, rw)
-	if err != nil {
-		s.l.Error("Unable to marshal json", "error", err)
-	}
-}
-
 func (s *Segments) GetBySlug(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
