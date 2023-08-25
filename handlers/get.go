@@ -10,12 +10,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (s *Segments) Get(rw http.ResponseWriter, _ *http.Request) {
+func (s *Segments) Get(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
-	slugs := data.GetSegments()
+	segments, err := s.d.GetSegments(r.Context())
+	if err != nil {
+		s.l.Error("Unable to get segments", "error", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		if err != nil {
+			s.l.Error("Unable to marshal json", "error", err)
+		}
+		return
+	}
 
-	err := data.ToJSON(slugs, rw)
+	err = data.ToJSON(segments, rw)
 	if err != nil {
 		s.l.Error("Unable to marshal json", "error", err)
 	}

@@ -2,11 +2,10 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/charmbracelet/log"
-
-	"github.com/peyuaa/segmentify/db"
 )
 
 var (
@@ -20,25 +19,25 @@ var (
 // Segment defines the structure for an API segment
 type Segment struct {
 	// the id for the segment
-	//
-	// required: false
-	// min: 1
 	ID int `json:"id"` // Unique identifier for the segment
 
 	// the segment's slug
-	//
-	// required: true
-	// max length: 255
 	Slug string `json:"slug" validate:"required"`
+
+	// is the segment deleted
+	IsDeleted bool `json:"is_deleted"`
 }
 
-type Segments struct {
+// Segments defines a slice of Segment
+type Segments []Segment
+
+type SegmentifyDB struct {
 	l  *log.Logger
-	db *db.Segmentify
+	db *sql.DB
 }
 
-func New(l *log.Logger, db *db.Segmentify) *Segments {
-	return &Segments{
+func New(l *log.Logger, db *sql.DB) *SegmentifyDB {
+	return &SegmentifyDB{
 		l:  l,
 		db: db,
 	}
@@ -59,8 +58,8 @@ var segments = []Segment{
 	},
 }
 
-func (s *Segments) Add(ctx context.Context, segment Segment) error {
-	exists, err := s.db.IsSegmentExists(ctx, segment.Slug)
+func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
+	exists, err := s.IsSegmentExists(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to check segment existence: %w", err)
 	}
@@ -68,7 +67,7 @@ func (s *Segments) Add(ctx context.Context, segment Segment) error {
 		return ErrSegmentAlreadyExists
 	}
 
-	err = s.db.InsertSegment(ctx, segment.Slug)
+	err = s.InsertSegment(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to insert segment: %w", err)
 	}
@@ -76,8 +75,13 @@ func (s *Segments) Add(ctx context.Context, segment Segment) error {
 	return nil
 }
 
-func GetSegments() []Segment {
-	return segments
+func (s *SegmentifyDB) GetSegments(ctx context.Context) (Segments, error) {
+	segments, err := s.SelectSegments(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get segments: %w", err)
+	}
+
+	return segments, nil
 }
 
 func GetSegmentByID(id int) (*Segment, error) {

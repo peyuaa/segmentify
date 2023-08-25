@@ -9,10 +9,10 @@ import (
 type Segments struct {
 	l *log.Logger
 	v *data.Validation
-	d *data.Segments
+	d *data.SegmentifyDB
 }
 
-func NewSegments(l *log.Logger, v *data.Validation, d *data.Segments) *Segments {
+func NewSegments(l *log.Logger, v *data.Validation, d *data.SegmentifyDB) *Segments {
 	return &Segments{
 		l: l,
 		v: v,
