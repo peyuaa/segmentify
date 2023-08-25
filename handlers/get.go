@@ -35,12 +35,12 @@ func (s *Segments) GetById(rw http.ResponseWriter, r *http.Request) {
 
 	id := s.getId(r)
 
-	slug, err := data.GetSegmentByID(id)
+	segment, err := s.d.GetSegmentByID(r.Context(), id)
 
 	switch {
 	case err == nil:
 	case errors.Is(err, data.ErrSegmentNotFound):
-		s.l.Warn("Unable to find slug in database", "id", id, "error", err)
+		s.l.Warn("Unable to find segment in database", "id", id, "error", err)
 		rw.WriteHeader(http.StatusNotFound)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		if err != nil {
@@ -48,7 +48,7 @@ func (s *Segments) GetById(rw http.ResponseWriter, r *http.Request) {
 		}
 		return
 	default:
-		s.l.Error("Error retrieving slug from the database", "error", err)
+		s.l.Error("Error retrieving segment from the database", "error", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		if err != nil {
@@ -57,7 +57,7 @@ func (s *Segments) GetById(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = data.ToJSON(slug, rw)
+	err = data.ToJSON(segment, rw)
 	if err != nil {
 		s.l.Error("Unable to marshal json", "error", err)
 	}

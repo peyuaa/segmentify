@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/charmbracelet/log"
@@ -43,21 +44,6 @@ func New(l *log.Logger, db *sql.DB) *SegmentifyDB {
 	}
 }
 
-var segments = []Segment{
-	{
-		ID:   1,
-		Slug: "AVITO_VOICE_MESSAGES",
-	},
-	{
-		ID:   2,
-		Slug: "AVITO_PERFORMANCE_VAS",
-	},
-	{
-		ID:   3,
-		Slug: "AVITO_DISCOUNT_30",
-	},
-}
-
 func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
 	exists, err := s.IsSegmentExists(ctx, segment.Slug)
 	if err != nil {
@@ -84,12 +70,14 @@ func (s *SegmentifyDB) GetSegments(ctx context.Context) (Segments, error) {
 	return segments, nil
 }
 
-func GetSegmentByID(id int) (*Segment, error) {
-	for _, segment := range segments {
-		if segment.ID == id {
-			return &segment, nil
+func (s *SegmentifyDB) GetSegmentByID(ctx context.Context, id int) (Segment, error) {
+	segment, err := s.SelectSegmentByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return segment, ErrSegmentNotFound
 		}
+		return segment, fmt.Errorf("unable to get segment by id: %w", err)
 	}
 
-	return nil, ErrSegmentNotFound
+	return segment, nil
 }
