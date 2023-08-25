@@ -78,3 +78,11 @@ func (s *Segments) getId(r *http.Request) int {
 
 	return id
 }
+
+// getSlug returns the slug from the url
+func (s *Segments) getSlug(r *http.Request) string {
+	// parse the product id from the url
+	vars := mux.Vars(r)
+
+	return vars["slug"]
+}

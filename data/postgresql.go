@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// SelectSegments returns a list of all segments from the database
-func (s *SegmentifyDB) SelectSegments(ctx context.Context) (Segments, error) {
+// selectSegments returns a list of all segments from the database
+func (s *SegmentifyDB) selectSegments(ctx context.Context) (Segments, error) {
 	rows, err := s.db.QueryContext(ctx, "SELECT id, slug, is_deleted FROM segments")
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -34,8 +34,8 @@ func (s *SegmentifyDB) SelectSegments(ctx context.Context) (Segments, error) {
 	return segments, nil
 }
 
-// SelectSegmentByID returns a segment with given id from the database
-func (s *SegmentifyDB) SelectSegmentByID(ctx context.Context, id int) (Segment, error) {
+// selectSegmentByID returns a segment with given id from the database
+func (s *SegmentifyDB) selectSegmentByID(ctx context.Context, id int) (Segment, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return Segment{}, fmt.Errorf("unable to begin transaction: %w", err)
@@ -59,8 +59,8 @@ func (s *SegmentifyDB) SelectSegmentByID(ctx context.Context, id int) (Segment, 
 	return segment, nil
 }
 
-// InsertSegment inserts segment with given slug into the database
-func (s *SegmentifyDB) InsertSegment(ctx context.Context, slug string) error {
+// insertSegment inserts segment with given slug into the database
+func (s *SegmentifyDB) insertSegment(ctx context.Context, slug string) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
@@ -82,9 +82,9 @@ func (s *SegmentifyDB) InsertSegment(ctx context.Context, slug string) error {
 	return nil
 }
 
-// IsSegmentExists checks if segment with given slug exists in the database
+// isSegmentExists checks if segment with given slug exists in the database
 // Returns true if segment exists, false otherwise
-func (s *SegmentifyDB) IsSegmentExists(ctx context.Context, slug string) (bool, error) {
+func (s *SegmentifyDB) isSegmentExists(ctx context.Context, slug string) (bool, error) {
 	var count int
 	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM segments WHERE slug = $1", slug).Scan(&count)
 	if err != nil {
@@ -92,4 +92,36 @@ func (s *SegmentifyDB) IsSegmentExists(ctx context.Context, slug string) (bool, 
 	}
 
 	return count > 0, nil
+}
+
+func (s *SegmentifyDB) isSegmentDeleted(ctx context.Context, slug string) (bool, error) {
+	var isDeleted bool
+	err := s.db.QueryRowContext(ctx, "SELECT is_deleted FROM segments WHERE slug = $1", slug).Scan(&isDeleted)
+	if err != nil {
+		return false, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	return isDeleted, nil
+}
+
+func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("unable to begin transaction: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, "UPDATE segments SET is_deleted = true WHERE slug = $1", slug)
+	if err != nil {
+		rollErr := tx.Rollback()
+		if rollErr != nil {
+			s.l.Error("Unable to rollback transaction", "error", rollErr)
+		}
+		return fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit transaction: %w", err)
+	}
+
+	return nil
 }

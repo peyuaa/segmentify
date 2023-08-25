@@ -79,6 +79,9 @@ func main() {
 	getR.HandleFunc("/segments", sh.Get)
 	getR.HandleFunc("/segments/{id:[0-9]+}", sh.GetById)
 
+	deleteR := sm.Methods(http.MethodDelete).Subrouter()
+	deleteR.HandleFunc("/segments/{slug:[a-zA-Z_0-9]+}", sh.Delete)
+
 	// CORS
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
 

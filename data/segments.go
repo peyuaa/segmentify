@@ -45,7 +45,7 @@ func New(l *log.Logger, db *sql.DB) *SegmentifyDB {
 }
 
 func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
-	exists, err := s.IsSegmentExists(ctx, segment.Slug)
+	exists, err := s.isSegmentExists(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to check segment existence: %w", err)
 	}
@@ -53,7 +53,7 @@ func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
 		return ErrSegmentAlreadyExists
 	}
 
-	err = s.InsertSegment(ctx, segment.Slug)
+	err = s.insertSegment(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to insert segment: %w", err)
 	}
@@ -62,7 +62,7 @@ func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
 }
 
 func (s *SegmentifyDB) GetSegments(ctx context.Context) (Segments, error) {
-	segments, err := s.SelectSegments(ctx)
+	segments, err := s.selectSegments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get segments: %w", err)
 	}
@@ -71,7 +71,7 @@ func (s *SegmentifyDB) GetSegments(ctx context.Context) (Segments, error) {
 }
 
 func (s *SegmentifyDB) GetSegmentByID(ctx context.Context, id int) (Segment, error) {
-	segment, err := s.SelectSegmentByID(ctx, id)
+	segment, err := s.selectSegmentByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return segment, ErrSegmentNotFound
@@ -80,4 +80,23 @@ func (s *SegmentifyDB) GetSegmentByID(ctx context.Context, id int) (Segment, err
 	}
 
 	return segment, nil
+}
+
+func (s *SegmentifyDB) Delete(ctx context.Context, slug string) error {
+	isDeleted, err := s.isSegmentDeleted(ctx, slug)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrSegmentNotFound
+		}
+		return fmt.Errorf("unable to check whether segment is active: %w", err)
+	}
+	if isDeleted {
+		return ErrSegmentNotFound
+	}
+
+	err = s.deleteSegment(ctx, slug)
+	if err != nil {
+		return fmt.Errorf("unable to delete segment: %w", err)
+	}
+	return nil
 }
