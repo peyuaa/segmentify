@@ -17,9 +17,15 @@ func (s *Segments) Delete(rw http.ResponseWriter, r *http.Request) {
 	case errors.Is(err, data.ErrSegmentNotFound):
 		rw.WriteHeader(http.StatusNotFound)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		if err != nil {
+			s.l.Error("Unable to serialize GenericError", "error", err)
+		}
 	default:
 		s.l.Error("Unable to delete segment", "error", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		if err != nil {
+			s.l.Error("Unable to serialize GenericError", "error", err)
+		}
 	}
 }
