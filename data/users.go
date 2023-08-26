@@ -10,7 +10,7 @@ type SegmentAdd struct {
 	// the segment's slug
 	Slug string `json:"slug" validate:"required,min=5,max=50"`
 	// expiration date
-	Expired string `json:"omitempty,expired" validate:"omitempty,datetime=2006-01-02T15:04:05Z"`
+	Expired *string `json:"omitempty,expired" validate:"omitempty,datetime=2006-01-02T15:04:05Z"`
 }
 
 // SegmentDelete defines the structure for an API for deleting segments
