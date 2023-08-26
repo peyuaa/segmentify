@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"errors"
-	"github.com/peyuaa/segmentify/data"
 	"net/http"
+
+	"github.com/peyuaa/segmentify/data"
 
 	"github.com/gorilla/mux"
 )
