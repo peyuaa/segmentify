@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"errors"
-	"net/http"
-	"strconv"
-
 	"github.com/peyuaa/segmentify/data"
+	"net/http"
 
 	"github.com/gorilla/mux"
 )
@@ -59,22 +57,6 @@ func (s *Segments) GetBySlug(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.l.Error("Unable to marshal json", "error", err)
 	}
-}
-
-// getId returns the slug id from the url
-// Log error if func cannot convert the id into an integer
-// this should never happen as the router ensures that
-// this is a valid number
-func (s *Segments) getId(r *http.Request) int {
-	// parse the product id from the url
-	vars := mux.Vars(r)
-
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		s.l.Error("[SHOULD NEVER HAPPEN] Unable to convert id into integer", "error", err)
-	}
-
-	return id
 }
 
 // getSlug returns the slug from the url
