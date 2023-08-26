@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/peyuaa/segmentify/models"
 )
 
 // selectSegments returns a list of all segments from the database
-func (s *SegmentifyDB) selectSegments(ctx context.Context) (Segments, error) {
+func (s *SegmentifyDB) selectSegments(ctx context.Context) (models.SegmentsDB, error) {
 	rows, err := s.db.QueryContext(ctx, "SELECT id, slug, is_deleted FROM segments")
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -20,9 +22,9 @@ func (s *SegmentifyDB) selectSegments(ctx context.Context) (Segments, error) {
 		}
 	}()
 
-	var segments Segments
+	var segments models.SegmentsDB
 	for rows.Next() {
-		var segment Segment
+		var segment models.SegmentDB
 		if err := rows.Scan(&segment.ID, &segment.Slug, &segment.IsDeleted); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
@@ -36,13 +38,13 @@ func (s *SegmentifyDB) selectSegments(ctx context.Context) (Segments, error) {
 	return segments, nil
 }
 
-func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (Segment, error) {
+func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (models.SegmentDB, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return Segment{}, fmt.Errorf("unable to begin transaction: %w", err)
+		return models.SegmentDB{}, fmt.Errorf("unable to begin transaction: %w", err)
 	}
 
-	var segment Segment
+	var segment models.SegmentDB
 	err = tx.QueryRowContext(ctx, "SELECT id, slug, is_deleted FROM segments WHERE slug = $1", slug).
 		Scan(&segment.ID, &segment.Slug, &segment.IsDeleted)
 	if err != nil {
@@ -50,11 +52,11 @@ func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (Se
 		if rollErr != nil {
 			s.l.Error("Unable to rollback transaction", "error", rollErr)
 		}
-		return Segment{}, fmt.Errorf("unable to execute query: %w", err)
+		return models.SegmentDB{}, fmt.Errorf("unable to execute query: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return Segment{}, fmt.Errorf("unable to commit transaction: %w", err)
+		return models.SegmentDB{}, fmt.Errorf("unable to commit transaction: %w", err)
 	}
 
 	return segment, nil
@@ -129,7 +131,7 @@ func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
 
 // changeUsersSegments changes the segments of a user
 // It calls addSegmentsToUser and deleteUserSegments and stores the segments addition and deletion history in one transaction
-func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us UserSegments) error {
+func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us models.UserSegmentsDB) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
@@ -179,7 +181,7 @@ func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us UserSegments)
 }
 
 // addSegmentsToUser add segments to user using transaction tx
-func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentAdd) (err error) {
+func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB) (err error) {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO users_segments (user_id, slug, expiration_date) VALUES ($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -201,7 +203,7 @@ func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID
 	return nil
 }
 
-func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentAdd, time time.Time) error {
+func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB, time time.Time) error {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO user_segment_history (user_id, segment_slug, date_added) VALUES ($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -223,7 +225,7 @@ func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx,
 	return nil
 }
 
-func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentDelete, time time.Time) error {
+func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB, time time.Time) error {
 	stmt, err := tx.PrepareContext(ctx, "UPDATE user_segment_history SET date_removed = $1 WHERE user_id = $2 AND segment_slug = $3 AND date_removed IS NULL")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -246,7 +248,7 @@ func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, t
 }
 
 // deleteUserSegments deletes segments from user using transaction tx
-func (s *SegmentifyDB) deleteUserSegments(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentDelete) error {
+func (s *SegmentifyDB) deleteUserSegments(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB) error {
 	stmt, err := tx.PrepareContext(ctx, "DELETE FROM users_segments WHERE user_id = $1 AND slug = $2")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)

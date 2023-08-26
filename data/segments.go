@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/peyuaa/segmentify/models"
+
 	"github.com/charmbracelet/log"
 )
 
@@ -16,21 +18,6 @@ var (
 	// ErrSegmentAlreadyExists is an error raised when a segment already exists in the database
 	ErrSegmentAlreadyExists = fmt.Errorf("segment already exists")
 )
-
-// Segment defines the structure for an API segment
-type Segment struct {
-	// the id for the segment
-	ID int `json:"id"` // Unique identifier for the segment
-
-	// the segment's slug
-	Slug string `json:"slug" validate:"required,min=5,max=50"`
-
-	// is the segment deleted
-	IsDeleted bool `json:"is_deleted"`
-}
-
-// Segments defines a slice of Segment
-type Segments []Segment
 
 type SegmentifyDB struct {
 	l  *log.Logger
@@ -44,7 +31,7 @@ func New(l *log.Logger, db *sql.DB) *SegmentifyDB {
 	}
 }
 
-func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
+func (s *SegmentifyDB) Add(ctx context.Context, segment models.Segment) error {
 	exists, err := s.isSegmentExists(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to check segment existence: %w", err)
@@ -61,22 +48,37 @@ func (s *SegmentifyDB) Add(ctx context.Context, segment Segment) error {
 	return nil
 }
 
-func (s *SegmentifyDB) GetSegments(ctx context.Context) (Segments, error) {
-	segments, err := s.selectSegments(ctx)
+func (s *SegmentifyDB) GetSegments(ctx context.Context) (models.Segments, error) {
+	segmentsDB, err := s.selectSegments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get segments: %w", err)
+	}
+
+	segments := make(models.Segments, len(segmentsDB))
+	for i, segmentDB := range segmentsDB {
+		segments[i] = models.Segment{
+			ID:        segmentDB.ID,
+			Slug:      segmentDB.Slug,
+			IsDeleted: segmentDB.IsDeleted,
+		}
 	}
 
 	return segments, nil
 }
 
-func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (Segment, error) {
-	segment, err := s.selectSegmentBySlug(ctx, slug)
+func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (models.Segment, error) {
+	segmentDB, err := s.selectSegmentBySlug(ctx, slug)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return segment, ErrSegmentNotFound
+			return models.Segment{}, ErrSegmentNotFound
 		}
-		return segment, fmt.Errorf("unable to get segment by slug: %w", err)
+		return models.Segment{}, fmt.Errorf("unable to get segment by slug: %w", err)
+	}
+
+	segment := models.Segment{
+		ID:        segmentDB.ID,
+		Slug:      segmentDB.Slug,
+		IsDeleted: segmentDB.IsDeleted,
 	}
 
 	return segment, nil

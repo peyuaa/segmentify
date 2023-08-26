@@ -7,12 +7,13 @@ import (
 	"net/url"
 
 	"github.com/peyuaa/segmentify/data"
+	"github.com/peyuaa/segmentify/models"
 )
 
 func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 	// fetch the segment from the context
-	segment := r.Context().Value(KeySegment{}).(data.Segment)
+	segment := r.Context().Value(KeySegment{}).(models.Segment)
 
 	s.l.Debug("Inserting segment", "segment", segment)
 
@@ -84,7 +85,7 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 	rw.Header().Add("Content-Type", "application/json")
 
 	// fetch the user segments from the context
-	userSegments := r.Context().Value(KeyUserSegments{}).(data.UserSegments)
+	userSegments := r.Context().Value(KeyUserSegments{}).(models.UserSegments)
 
 	// add the segments to the user
 	err := s.d.ChangeUserSegments(r.Context(), userSegments)
