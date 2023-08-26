@@ -10,7 +10,7 @@ type SegmentAdd struct {
 	// the segment's slug
 	Slug string `json:"slug" validate:"required,min=5,max=50"`
 	// expiration date
-	Expired string `json:"expired" validate:"datetime=2006-01-02T15:04:05Z"`
+	Expired string `json:"omitempty,expired" validate:"omitempty,datetime=2006-01-02T15:04:05Z"`
 }
 
 // SegmentDelete defines the structure for an API for deleting segments
@@ -49,9 +49,9 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us UserSegments) 
 	}
 
 	// add the segments to the user
-	err := s.addSegmentsToUser(ctx, us.ID, us.AddSegments)
+	err := s.changeUsersSegments(ctx, us)
 	if err != nil {
-		return fmt.Errorf("unable to add segments to user: %w", err)
+		return fmt.Errorf("unable to change user segments: %w", err)
 	}
 
 	return nil

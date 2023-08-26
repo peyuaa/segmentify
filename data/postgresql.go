@@ -2,7 +2,9 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"time"
 )
 
 // selectSegments returns a list of all segments from the database
@@ -125,8 +127,9 @@ func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
 	return nil
 }
 
-// addSegmentsToUser add segments to user in one transaction
-func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, userID int, segments []SegmentAdd) (err error) {
+// changeUsersSegments changes the segments of a user
+// It calls addSegmentsToUser and deleteUserSegments and stores the segments addition and deletion history in one transaction
+func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us UserSegments) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
@@ -145,6 +148,38 @@ func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, userID int, segmen
 		}
 	}()
 
+	// time of change
+	t := time.Now()
+
+	// add the segments to the user
+	err = s.addSegmentsToUser(ctx, tx, us.ID, us.AddSegments)
+	if err != nil {
+		return fmt.Errorf("unable to add segments to user: %w", err)
+	}
+
+	// add the segments to the user history
+	err = s.addSegmentInUsersHistory(ctx, tx, us.ID, us.AddSegments, t)
+	if err != nil {
+		return fmt.Errorf("unable to add segments to user history: %w", err)
+	}
+
+	// remove the segments from the user
+	err = s.deleteUserSegments(ctx, tx, us.ID, us.RemoveSegments)
+	if err != nil {
+		return fmt.Errorf("unable to delete segments from user: %w", err)
+	}
+
+	// add the deleted segments to the user history
+	err = s.addSegmentsRemoveDateInUserHistory(ctx, tx, us.ID, us.RemoveSegments, t)
+	if err != nil {
+		return fmt.Errorf("unable to add deleted segments to user history: %w", err)
+	}
+
+	return nil
+}
+
+// addSegmentsToUser add segments to user using transaction tx
+func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentAdd) (err error) {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO users_segments (user_id, slug, expiration_date) VALUES ($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -158,6 +193,73 @@ func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, userID int, segmen
 
 	for _, segment := range segments {
 		_, err := stmt.ExecContext(ctx, userID, segment.Slug, segment.Expired)
+		if err != nil {
+			return fmt.Errorf("unable to execute query: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentAdd, time time.Time) error {
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO user_segment_history (user_id, segment_slug, date_added) VALUES ($1, $2, $3)")
+	if err != nil {
+		return fmt.Errorf("unable to prepare statement: %w", err)
+	}
+	defer func() {
+		stmtErr := stmt.Close()
+		if stmtErr != nil {
+			s.l.Error("Unable to close statement", "error", stmtErr)
+		}
+	}()
+
+	for _, segment := range segments {
+		_, err := stmt.ExecContext(ctx, userID, segment.Slug, time)
+		if err != nil {
+			return fmt.Errorf("unable to execute query: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentDelete, time time.Time) error {
+	stmt, err := tx.PrepareContext(ctx, "UPDATE user_segment_history SET date_removed = $1 WHERE user_id = $2 AND segment_slug = $3 AND date_removed IS NULL")
+	if err != nil {
+		return fmt.Errorf("unable to prepare statement: %w", err)
+	}
+	defer func() {
+		stmtErr := stmt.Close()
+		if stmtErr != nil {
+			s.l.Error("Unable to close statement", "error", stmtErr)
+		}
+	}()
+
+	for _, segment := range segments {
+		_, err := stmt.ExecContext(ctx, time, userID, segment.Slug)
+		if err != nil {
+			return fmt.Errorf("unable to execute query: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// deleteUserSegments deletes segments from user using transaction tx
+func (s *SegmentifyDB) deleteUserSegments(ctx context.Context, tx *sql.Tx, userID int, segments []SegmentDelete) error {
+	stmt, err := tx.PrepareContext(ctx, "DELETE FROM users_segments WHERE user_id = $1 AND slug = $2")
+	if err != nil {
+		return fmt.Errorf("unable to prepare statement: %w", err)
+	}
+	defer func() {
+		stmtErr := stmt.Close()
+		if stmtErr != nil {
+			s.l.Error("Unable to close statement", "error", stmtErr)
+		}
+	}()
+
+	for _, segment := range segments {
+		_, err := stmt.ExecContext(ctx, userID, segment.Slug)
 		if err != nil {
 			return fmt.Errorf("unable to execute query: %w", err)
 		}
