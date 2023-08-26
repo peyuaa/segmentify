@@ -26,8 +26,7 @@ type ValidationError struct {
 
 func (s *Segments) writeGenericError(rw http.ResponseWriter, status int, message string, err error) {
 	rw.WriteHeader(status)
-	// specify the segment that was not found
-	err = fmt.Errorf(message, "error", err)
+	err = fmt.Errorf("%v: %w", message, err)
 	err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
 	if err != nil {
 		s.l.Error("Unable to serialize GenericError", "error", err)

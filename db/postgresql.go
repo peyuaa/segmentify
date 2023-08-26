@@ -283,3 +283,46 @@ func (p *PostgresWrapper) DeleteUserSegments(ctx context.Context, tx *sql.Tx, us
 
 	return nil
 }
+
+// GetUsersSegments returns a list of all not expired segments of a user from the database
+func (p *PostgresWrapper) GetUsersSegments(ctx context.Context, userID int) (models.SegmentsDB, error) {
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to begin transaction: %w", err)
+	}
+
+	rows, err := tx.QueryContext(ctx,
+		"SELECT slug FROM users_segments WHERE user_id = $1 AND (expiration_date IS NULL OR expiration_date > NOW())",
+		userID)
+	if err != nil {
+		rollErr := tx.Rollback()
+		if rollErr != nil {
+			p.l.Error("Unable to rollback transaction", "error", rollErr)
+		}
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			p.l.Error("Unable to close rows", "error", err)
+		}
+	}()
+
+	segments := models.SegmentsDB{}
+	for rows.Next() {
+		var segment models.SegmentDB
+		if err := rows.Scan(&segment.Slug); err != nil {
+			return nil, fmt.Errorf("unable to scan row: %w", err)
+		}
+		segments = append(segments, segment)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error while iterating over rows: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("unable to commit transaction: %w", err)
+	}
+
+	return segments, nil
+}

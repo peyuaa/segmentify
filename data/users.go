@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/peyuaa/segmentify/models"
 )
@@ -23,6 +24,43 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSeg
 		if err != nil {
 			return fmt.Errorf("unable to get segment \"%v\": %w", segment.Slug, err)
 		}
+	}
+
+	// get user's segments
+	userSegments, err := s.db.GetUsersSegments(ctx, us.ID)
+	if err != nil {
+		return fmt.Errorf("unable to get user's segments: %w", err)
+	}
+
+	// create map of user's segments
+	userSegmentsMap := make(map[string]struct{}, len(userSegments))
+
+	// add user's segments to the map
+	for _, segment := range userSegments {
+		userSegmentsMap[segment.Slug] = struct{}{}
+	}
+
+	var errorMessage strings.Builder
+	var isError bool
+
+	// check that user don't already have the segments we want to add
+	for _, segment := range us.AddSegments {
+		if _, ok := userSegmentsMap[segment.Slug]; ok {
+			isError = true
+			errorMessage.WriteString(fmt.Sprintf("user already have segment \"%v\"\n", segment.Slug))
+		}
+	}
+
+	// check that user have the segments we want to remove
+	for _, segment := range us.RemoveSegments {
+		if _, ok := userSegmentsMap[segment.Slug]; !ok {
+			isError = true
+			errorMessage.WriteString(fmt.Sprintf("user don't have segment \"%v\"\n", segment.Slug))
+		}
+	}
+
+	if isError {
+		return fmt.Errorf("%w: %v", ErrIncorrectChangeUserSegmentsRequest, errorMessage.String())
 	}
 
 	userSegmentsDB := models.UserSegmentsDB{
@@ -52,7 +90,7 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSeg
 	}
 
 	// add the segments to the user
-	err := s.db.ChangeUsersSegments(ctx, userSegmentsDB)
+	err = s.db.ChangeUsersSegments(ctx, userSegmentsDB)
 	if err != nil {
 		return fmt.Errorf("unable to change user segments: %w", err)
 	}

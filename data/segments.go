@@ -18,6 +18,8 @@ var (
 
 	// ErrSegmentAlreadyExists is an error raised when a segment already exists in the database
 	ErrSegmentAlreadyExists = fmt.Errorf("segment already exists")
+
+	ErrIncorrectChangeUserSegmentsRequest = fmt.Errorf("incorrect change user segments request")
 )
 
 type SegmentifyDB struct {

@@ -93,8 +93,10 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 	switch {
 	case err == nil:
 	case errors.Is(err, data.ErrSegmentNotFound):
-		s.writeGenericError(rw, http.StatusNotFound, "request contains unknown segments: %w", err)
+		s.writeGenericError(rw, http.StatusNotFound, "request contains unknown segments", err)
 		return
+	case errors.Is(err, data.ErrIncorrectChangeUserSegmentsRequest):
+		s.writeGenericError(rw, http.StatusBadRequest, "request is incorrect", err)
 	default:
 		s.writeInternalServerError(rw, "Failed to change user segments", err)
 		return
