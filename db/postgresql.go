@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"context"
@@ -7,18 +7,32 @@ import (
 	"time"
 
 	"github.com/peyuaa/segmentify/models"
+
+	"github.com/charmbracelet/log"
 )
 
-// selectSegments returns a list of all segments from the database
-func (s *SegmentifyDB) selectSegments(ctx context.Context) (models.SegmentsDB, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT id, slug, is_deleted FROM segments")
+type PostgresWrapper struct {
+	l  *log.Logger
+	db *sql.DB
+}
+
+func New(l *log.Logger, db *sql.DB) *PostgresWrapper {
+	return &PostgresWrapper{
+		l:  l,
+		db: db,
+	}
+}
+
+// SelectSegments returns a list of all segments from the database
+func (p *PostgresWrapper) SelectSegments(ctx context.Context) (models.SegmentsDB, error) {
+	rows, err := p.db.QueryContext(ctx, "SELECT id, slug, is_deleted FROM segments")
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			s.l.Error("Unable to close rows", "error", err)
+			p.l.Error("Unable to close rows", "error", err)
 		}
 	}()
 
@@ -38,8 +52,8 @@ func (s *SegmentifyDB) selectSegments(ctx context.Context) (models.SegmentsDB, e
 	return segments, nil
 }
 
-func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (models.SegmentDB, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (p *PostgresWrapper) SelectSegmentBySlug(ctx context.Context, slug string) (models.SegmentDB, error) {
+	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		return models.SegmentDB{}, fmt.Errorf("unable to begin transaction: %w", err)
 	}
@@ -50,7 +64,7 @@ func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (mo
 	if err != nil {
 		rollErr := tx.Rollback()
 		if rollErr != nil {
-			s.l.Error("Unable to rollback transaction", "error", rollErr)
+			p.l.Error("Unable to rollback transaction", "error", rollErr)
 		}
 		return models.SegmentDB{}, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -62,9 +76,9 @@ func (s *SegmentifyDB) selectSegmentBySlug(ctx context.Context, slug string) (mo
 	return segment, nil
 }
 
-// insertSegment inserts segment with given slug into the database
-func (s *SegmentifyDB) insertSegment(ctx context.Context, slug string) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+// InsertSegment inserts segment with given slug into the database
+func (p *PostgresWrapper) InsertSegment(ctx context.Context, slug string) error {
+	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
 	}
@@ -73,7 +87,7 @@ func (s *SegmentifyDB) insertSegment(ctx context.Context, slug string) error {
 	if err != nil {
 		rollErr := tx.Rollback()
 		if rollErr != nil {
-			s.l.Error("Unable to rollback transaction", "error", rollErr)
+			p.l.Error("Unable to rollback transaction", "error", rollErr)
 		}
 		return fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -85,11 +99,11 @@ func (s *SegmentifyDB) insertSegment(ctx context.Context, slug string) error {
 	return nil
 }
 
-// isSegmentExists checks if segment with given slug exists in the database
+// IsSegmentExists checks if segment with given slug exists in the database
 // Returns true if segment exists, false otherwise
-func (s *SegmentifyDB) isSegmentExists(ctx context.Context, slug string) (bool, error) {
+func (p *PostgresWrapper) IsSegmentExists(ctx context.Context, slug string) (bool, error) {
 	var count int
-	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM segments WHERE slug = $1", slug).Scan(&count)
+	err := p.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM segments WHERE slug = $1", slug).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -97,9 +111,9 @@ func (s *SegmentifyDB) isSegmentExists(ctx context.Context, slug string) (bool, 
 	return count > 0, nil
 }
 
-func (s *SegmentifyDB) isSegmentDeleted(ctx context.Context, slug string) (bool, error) {
+func (p *PostgresWrapper) IsSegmentDeleted(ctx context.Context, slug string) (bool, error) {
 	var isDeleted bool
-	err := s.db.QueryRowContext(ctx, "SELECT is_deleted FROM segments WHERE slug = $1", slug).Scan(&isDeleted)
+	err := p.db.QueryRowContext(ctx, "SELECT is_deleted FROM segments WHERE slug = $1", slug).Scan(&isDeleted)
 	if err != nil {
 		return false, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -107,8 +121,8 @@ func (s *SegmentifyDB) isSegmentDeleted(ctx context.Context, slug string) (bool,
 	return isDeleted, nil
 }
 
-func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (p *PostgresWrapper) DeleteSegment(ctx context.Context, slug string) error {
+	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
 	}
@@ -117,7 +131,7 @@ func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
 	if err != nil {
 		rollErr := tx.Rollback()
 		if rollErr != nil {
-			s.l.Error("Unable to rollback transaction", "error", rollErr)
+			p.l.Error("Unable to rollback transaction", "error", rollErr)
 		}
 		return fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -129,10 +143,10 @@ func (s *SegmentifyDB) deleteSegment(ctx context.Context, slug string) error {
 	return nil
 }
 
-// changeUsersSegments changes the segments of a user
+// ChangeUsersSegments changes the segments of a user
 // It calls addSegmentsToUser and deleteUserSegments and stores the segments addition and deletion history in one transaction
-func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us models.UserSegmentsDB) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (p *PostgresWrapper) ChangeUsersSegments(ctx context.Context, us models.UserSegmentsDB) error {
+	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
 	}
@@ -140,7 +154,7 @@ func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us models.UserSe
 		if err != nil {
 			rollErr := tx.Rollback()
 			if rollErr != nil {
-				s.l.Error("Unable to rollback transaction", "error", rollErr)
+				p.l.Error("Unable to rollback transaction", "error", rollErr)
 			}
 			return
 		}
@@ -154,25 +168,25 @@ func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us models.UserSe
 	t := time.Now()
 
 	// add the segments to the user
-	err = s.addSegmentsToUser(ctx, tx, us.ID, us.AddSegments)
+	err = p.AddSegmentsToUser(ctx, tx, us.ID, us.AddSegments)
 	if err != nil {
 		return fmt.Errorf("unable to add segments to user: %w", err)
 	}
 
 	// add the segments to the user history
-	err = s.addSegmentInUsersHistory(ctx, tx, us.ID, us.AddSegments, t)
+	err = p.AddSegmentInUsersHistory(ctx, tx, us.ID, us.AddSegments, t)
 	if err != nil {
 		return fmt.Errorf("unable to add segments to user history: %w", err)
 	}
 
 	// remove the segments from the user
-	err = s.deleteUserSegments(ctx, tx, us.ID, us.RemoveSegments)
+	err = p.DeleteUserSegments(ctx, tx, us.ID, us.RemoveSegments)
 	if err != nil {
 		return fmt.Errorf("unable to delete segments from user: %w", err)
 	}
 
 	// add the deleted segments to the user history
-	err = s.addSegmentsRemoveDateInUserHistory(ctx, tx, us.ID, us.RemoveSegments, t)
+	err = p.AddSegmentsRemoveDateInUserHistory(ctx, tx, us.ID, us.RemoveSegments, t)
 	if err != nil {
 		return fmt.Errorf("unable to add deleted segments to user history: %w", err)
 	}
@@ -180,8 +194,8 @@ func (s *SegmentifyDB) changeUsersSegments(ctx context.Context, us models.UserSe
 	return nil
 }
 
-// addSegmentsToUser add segments to user using transaction tx
-func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB) (err error) {
+// AddSegmentsToUser add segments to user using transaction tx
+func (p *PostgresWrapper) AddSegmentsToUser(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB) (err error) {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO users_segments (user_id, slug, expiration_date) VALUES ($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -189,7 +203,7 @@ func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID
 	defer func() {
 		stmtErr := stmt.Close()
 		if stmtErr != nil {
-			s.l.Error("Unable to close statement", "error", stmtErr)
+			p.l.Error("Unable to close statement", "error", stmtErr)
 		}
 	}()
 
@@ -203,7 +217,7 @@ func (s *SegmentifyDB) addSegmentsToUser(ctx context.Context, tx *sql.Tx, userID
 	return nil
 }
 
-func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB, time time.Time) error {
+func (p *PostgresWrapper) AddSegmentInUsersHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB, time time.Time) error {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO user_segment_history (user_id, segment_slug, date_added) VALUES ($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -211,7 +225,7 @@ func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx,
 	defer func() {
 		stmtErr := stmt.Close()
 		if stmtErr != nil {
-			s.l.Error("Unable to close statement", "error", stmtErr)
+			p.l.Error("Unable to close statement", "error", stmtErr)
 		}
 	}()
 
@@ -225,7 +239,7 @@ func (s *SegmentifyDB) addSegmentInUsersHistory(ctx context.Context, tx *sql.Tx,
 	return nil
 }
 
-func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB, time time.Time) error {
+func (p *PostgresWrapper) AddSegmentsRemoveDateInUserHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB, time time.Time) error {
 	stmt, err := tx.PrepareContext(ctx, "UPDATE user_segment_history SET date_removed = $1 WHERE user_id = $2 AND segment_slug = $3 AND date_removed IS NULL")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -233,7 +247,7 @@ func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, t
 	defer func() {
 		stmtErr := stmt.Close()
 		if stmtErr != nil {
-			s.l.Error("Unable to close statement", "error", stmtErr)
+			p.l.Error("Unable to close statement", "error", stmtErr)
 		}
 	}()
 
@@ -247,8 +261,8 @@ func (s *SegmentifyDB) addSegmentsRemoveDateInUserHistory(ctx context.Context, t
 	return nil
 }
 
-// deleteUserSegments deletes segments from user using transaction tx
-func (s *SegmentifyDB) deleteUserSegments(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB) error {
+// DeleteUserSegments deletes segments from user using transaction tx
+func (p *PostgresWrapper) DeleteUserSegments(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB) error {
 	stmt, err := tx.PrepareContext(ctx, "DELETE FROM users_segments WHERE user_id = $1 AND slug = $2")
 	if err != nil {
 		return fmt.Errorf("unable to prepare statement: %w", err)
@@ -256,7 +270,7 @@ func (s *SegmentifyDB) deleteUserSegments(ctx context.Context, tx *sql.Tx, userI
 	defer func() {
 		stmtErr := stmt.Close()
 		if stmtErr != nil {
-			s.l.Error("Unable to close statement", "error", stmtErr)
+			p.l.Error("Unable to close statement", "error", stmtErr)
 		}
 	}()
 

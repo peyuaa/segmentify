@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/peyuaa/segmentify/db"
 	"github.com/peyuaa/segmentify/models"
 
 	"github.com/charmbracelet/log"
@@ -21,10 +22,10 @@ var (
 
 type SegmentifyDB struct {
 	l  *log.Logger
-	db *sql.DB
+	db *db.PostgresWrapper
 }
 
-func New(l *log.Logger, db *sql.DB) *SegmentifyDB {
+func New(l *log.Logger, db *db.PostgresWrapper) *SegmentifyDB {
 	return &SegmentifyDB{
 		l:  l,
 		db: db,
@@ -32,7 +33,7 @@ func New(l *log.Logger, db *sql.DB) *SegmentifyDB {
 }
 
 func (s *SegmentifyDB) Add(ctx context.Context, segment models.Segment) error {
-	exists, err := s.isSegmentExists(ctx, segment.Slug)
+	exists, err := s.db.IsSegmentExists(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to check segment existence: %w", err)
 	}
@@ -40,7 +41,7 @@ func (s *SegmentifyDB) Add(ctx context.Context, segment models.Segment) error {
 		return ErrSegmentAlreadyExists
 	}
 
-	err = s.insertSegment(ctx, segment.Slug)
+	err = s.db.InsertSegment(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to insert segment: %w", err)
 	}
@@ -49,7 +50,7 @@ func (s *SegmentifyDB) Add(ctx context.Context, segment models.Segment) error {
 }
 
 func (s *SegmentifyDB) GetSegments(ctx context.Context) (models.Segments, error) {
-	segmentsDB, err := s.selectSegments(ctx)
+	segmentsDB, err := s.db.SelectSegments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get segments: %w", err)
 	}
@@ -67,7 +68,7 @@ func (s *SegmentifyDB) GetSegments(ctx context.Context) (models.Segments, error)
 }
 
 func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (models.Segment, error) {
-	segmentDB, err := s.selectSegmentBySlug(ctx, slug)
+	segmentDB, err := s.db.SelectSegmentBySlug(ctx, slug)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Segment{}, ErrSegmentNotFound
@@ -85,7 +86,7 @@ func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (model
 }
 
 func (s *SegmentifyDB) Delete(ctx context.Context, slug string) error {
-	isDeleted, err := s.isSegmentDeleted(ctx, slug)
+	isDeleted, err := s.db.IsSegmentDeleted(ctx, slug)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return ErrSegmentNotFound
@@ -96,7 +97,7 @@ func (s *SegmentifyDB) Delete(ctx context.Context, slug string) error {
 		return ErrSegmentNotFound
 	}
 
-	err = s.deleteSegment(ctx, slug)
+	err = s.db.DeleteSegment(ctx, slug)
 	if err != nil {
 		return fmt.Errorf("unable to delete segment: %w", err)
 	}

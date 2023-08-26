@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/peyuaa/segmentify/data"
+	"github.com/peyuaa/segmentify/db"
 	"github.com/peyuaa/segmentify/handlers"
 
 	"github.com/charmbracelet/log"
@@ -61,8 +62,11 @@ func main() {
 
 	l.Info("Connected to postgresql database")
 
+	// create postgresql wrapper
+	dbWrap := db.New(l, dbConn)
+
 	// create new database struct
-	segmentifyDB := data.New(l, dbConn)
+	segmentifyDB := data.New(l, dbWrap)
 
 	// create the handlers
 	sh := handlers.NewSegments(l, v, segmentifyDB)

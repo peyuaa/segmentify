@@ -52,7 +52,7 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSeg
 	}
 
 	// add the segments to the user
-	err := s.changeUsersSegments(ctx, userSegmentsDB)
+	err := s.db.ChangeUsersSegments(ctx, userSegmentsDB)
 	if err != nil {
 		return fmt.Errorf("unable to change user segments: %w", err)
 	}
