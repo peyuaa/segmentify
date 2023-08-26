@@ -84,9 +84,7 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSeg
 	}
 
 	for i, segment := range us.RemoveSegments {
-		userSegmentsDB.RemoveSegments[i] = models.SegmentDeleteDB{
-			Slug: segment.Slug,
-		}
+		userSegmentsDB.RemoveSegments[i] = models.SegmentDeleteDB(segment)
 	}
 
 	// add the segments to the user

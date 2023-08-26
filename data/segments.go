@@ -59,11 +59,7 @@ func (s *SegmentifyDB) GetSegments(ctx context.Context) (models.Segments, error)
 
 	segments := make(models.Segments, len(segmentsDB))
 	for i, segmentDB := range segmentsDB {
-		segments[i] = models.Segment{
-			ID:        segmentDB.ID,
-			Slug:      segmentDB.Slug,
-			IsDeleted: segmentDB.IsDeleted,
-		}
+		segments[i] = models.Segment(segmentDB)
 	}
 
 	return segments, nil
@@ -78,11 +74,7 @@ func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (model
 		return models.Segment{}, fmt.Errorf("unable to get segment by slug: %w", err)
 	}
 
-	segment := models.Segment{
-		ID:        segmentDB.ID,
-		Slug:      segmentDB.Slug,
-		IsDeleted: segmentDB.IsDeleted,
-	}
+	segment := models.Segment(segmentDB)
 
 	return segment, nil
 }
