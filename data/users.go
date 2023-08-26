@@ -12,9 +12,12 @@ import (
 func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSegments) error {
 	// check if the add segments exists
 	for _, segment := range us.AddSegments {
-		_, err := s.GetSegmentBySlug(ctx, segment.Slug)
+		got, err := s.GetSegmentBySlug(ctx, segment.Slug)
 		if err != nil {
 			return fmt.Errorf("unable to get segment \"%v\": %w", segment.Slug, err)
+		}
+		if got.IsDeleted {
+			return fmt.Errorf("can't add deleted segment \"%v\" to user: %w", segment.Slug, ErrSegmentDeleted)
 		}
 	}
 

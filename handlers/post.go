@@ -97,6 +97,8 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 		return
 	case errors.Is(err, data.ErrIncorrectChangeUserSegmentsRequest):
 		s.writeGenericError(rw, http.StatusBadRequest, "request is incorrect", err)
+	case errors.Is(err, data.ErrSegmentDeleted):
+		s.writeGenericError(rw, http.StatusBadRequest, "request contains deleted segment", err)
 	default:
 		s.writeInternalServerError(rw, "Failed to change user segments", err)
 		return

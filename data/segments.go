@@ -13,12 +13,16 @@ import (
 )
 
 var (
-	// ErrSegmentNotFound is an error raised when a segment can not be found in the database
+	// ErrSegmentNotFound is an error returned when a segment can not be found in the database
 	ErrSegmentNotFound = fmt.Errorf("segment not found")
 
-	// ErrSegmentAlreadyExists is an error raised when a segment already exists in the database
+	// ErrSegmentDeleted is an error returned when requested segment was marked as deleted
+	ErrSegmentDeleted = fmt.Errorf("segment deleted")
+
+	// ErrSegmentAlreadyExists is an error returned when a segment already exists in the database
 	ErrSegmentAlreadyExists = fmt.Errorf("segment already exists")
 
+	// ErrIncorrectChangeUserSegmentsRequest is an error returned when a request to change user segments is incorrect
 	ErrIncorrectChangeUserSegmentsRequest = fmt.Errorf("incorrect change user segments request")
 )
 
