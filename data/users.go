@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -97,4 +98,28 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSeg
 	}
 
 	return nil
+}
+
+func (s *SegmentifyDB) GetUsersSegments(ctx context.Context, userID int) (models.ActiveSegments, error) {
+	segmentsDB, err := s.db.GetUsersSegments(ctx, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoUserData
+		}
+		return nil, fmt.Errorf("unable to get user's segments: %w", err)
+	}
+
+	// in some cases GetUsersSegments returns empty slice instead of sql.ErrNoRows
+	if len(segmentsDB) == 0 {
+		return nil, ErrNoUserData
+	}
+
+	segments := make(models.ActiveSegments, len(segmentsDB))
+	for i, segmentDB := range segmentsDB {
+		segments[i] = models.ActiveSegment{
+			Slug: segmentDB.Slug,
+		}
+	}
+
+	return segments, nil
 }

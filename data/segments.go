@@ -24,6 +24,9 @@ var (
 
 	// ErrIncorrectChangeUserSegmentsRequest is an error returned when a request to change user segments is incorrect
 	ErrIncorrectChangeUserSegmentsRequest = fmt.Errorf("incorrect change user segments request")
+
+	// ErrNoUserData is an error returned when there is no user data about segments for given userID
+	ErrNoUserData = fmt.Errorf("no user data about segments for given userID")
 )
 
 type SegmentifyDB struct {

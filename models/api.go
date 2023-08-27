@@ -12,6 +12,15 @@ type Segment struct {
 	IsDeleted bool `json:"is_deleted"`
 }
 
+// ActiveSegment defines the structure of Segment for an API response for active user's segments
+type ActiveSegment struct {
+	// the segment's slug
+	Slug string `json:"slug"`
+}
+
+// ActiveSegments defines the structure of response for active user's segments
+type ActiveSegments []ActiveSegment
+
 // Segments defines a slice of Segment
 type Segments []Segment
 

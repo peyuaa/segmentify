@@ -87,6 +87,7 @@ func main() {
 	getR := sm.Methods(http.MethodGet).Subrouter()
 	getR.HandleFunc("/segments", sh.Get)
 	getR.HandleFunc("/segments/{slug:[a-zA-Z_0-9]+}", sh.GetBySlug)
+	getR.HandleFunc("/segments/users/{id:[0-9]+}", sh.GetActiveSegments)
 
 	deleteR := sm.Methods(http.MethodDelete).Subrouter()
 	deleteR.HandleFunc("/segments/{slug:[a-zA-Z_0-9]+}", sh.Delete)
