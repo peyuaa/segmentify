@@ -7,6 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.15.1
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
+	github.com/lib/pq v1.10.9
 )
 
 require (

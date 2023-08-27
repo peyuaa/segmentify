@@ -5,15 +5,16 @@ import (
 	"net/http"
 
 	"github.com/peyuaa/segmentify/data"
+	"github.com/peyuaa/segmentify/models"
 )
 
-func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
+func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		slug := data.Slug{}
+		segment := models.Segment{}
 
-		err := data.FromJSON(&slug, r.Body)
+		err := data.FromJSON(&segment, r.Body)
 		if err != nil {
-			s.l.Error("Unable to deserialize slug", "error", err)
+			s.l.Error("Unable to deserialize segment", "error", err)
 
 			rw.WriteHeader(http.StatusBadRequest)
 			err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
@@ -22,11 +23,9 @@ func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 			}
 		}
 
-		// validate the slug
-		errs := s.v.Validate(slug)
+		// validate the segment
+		errs := s.v.Validate(segment)
 		if len(errs) != 0 {
-			s.l.Error("Unable to validate slug", "error", errs)
-
 			// return the validation messages as an array
 			rw.WriteHeader(http.StatusUnprocessableEntity)
 			err = data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
@@ -36,8 +35,41 @@ func (s *Slugs) MiddlewareValidateSlug(next http.Handler) http.Handler {
 			return
 		}
 
-		// add the slug to the context
-		ctx := context.WithValue(r.Context(), KeySlug{}, slug)
+		// add the segment to the context
+		ctx := context.WithValue(r.Context(), KeySegment{}, segment)
+		r = r.WithContext(ctx)
+
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func (s *Segments) MiddlewareValidateUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		user := models.UserSegments{}
+
+		err := data.FromJSON(&user, r.Body)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			err = data.ToJSON(&GenericError{Message: err.Error()}, rw)
+			if err != nil {
+				s.l.Error("Unable to serialize GenericError", "error", err)
+			}
+		}
+
+		errs := s.v.Validate(user)
+		if len(errs) != 0 {
+			// return the validation messages as an array
+			rw.WriteHeader(http.StatusUnprocessableEntity)
+			err = data.ToJSON(&ValidationError{Messages: errs.Errors()}, rw)
+			if err != nil {
+				s.l.Error("Unable to serialize ValidationError", "error", err)
+			}
+			return
+		}
+
+		// add the request object to the context
+		ctx := context.WithValue(r.Context(), KeyUserSegments{}, user)
 		r = r.WithContext(ctx)
 
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
