@@ -21,6 +21,10 @@ type ActiveSegment struct {
 // ActiveSegments defines the structure of response for active user's segments
 type ActiveSegments []ActiveSegment
 
+type ActiveSegmentsResponse struct {
+	ActiveSegments ActiveSegments `json:"segments"`
+}
+
 // Segments defines a slice of Segment
 type Segments []Segment
 

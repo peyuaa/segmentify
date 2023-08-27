@@ -97,10 +97,31 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 		return
 	case errors.Is(err, data.ErrIncorrectChangeUserSegmentsRequest):
 		s.writeGenericError(rw, http.StatusBadRequest, "request is incorrect", err)
+		return
 	case errors.Is(err, data.ErrSegmentDeleted):
 		s.writeGenericError(rw, http.StatusBadRequest, "request contains deleted segment", err)
+		return
 	default:
 		s.writeInternalServerError(rw, "Failed to change user segments", err)
+		return
+	}
+
+	// get the user segments after the change
+	newSegments, err := s.d.GetUsersSegments(r.Context(), userSegments.ID)
+	switch {
+	case err == nil:
+	case errors.Is(err, data.ErrNoUserData):
+	default:
+		s.writeInternalServerError(rw, "unable to retrieve users segments", err)
+	}
+
+	response := models.ActiveSegmentsResponse{
+		ActiveSegments: newSegments,
+	}
+
+	err = data.ToJSON(response, rw)
+	if err != nil {
+		s.writeInternalServerError(rw, "unabel to serialize models.ActiveSegmentsResponse", err)
 		return
 	}
 }

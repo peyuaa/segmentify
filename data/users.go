@@ -104,14 +104,14 @@ func (s *SegmentifyDB) GetUsersSegments(ctx context.Context, userID int) (models
 	segmentsDB, err := s.db.GetUsersSegments(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNoUserData
+			return models.ActiveSegments{}, ErrNoUserData
 		}
-		return nil, fmt.Errorf("unable to get user's segments: %w", err)
+		return models.ActiveSegments{}, fmt.Errorf("unable to get user's segments: %w", err)
 	}
 
 	// in some cases GetUsersSegments returns empty slice instead of sql.ErrNoRows
 	if len(segmentsDB) == 0 {
-		return nil, ErrNoUserData
+		return models.ActiveSegments{}, ErrNoUserData
 	}
 
 	segments := make(models.ActiveSegments, len(segmentsDB))
