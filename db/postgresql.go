@@ -292,7 +292,7 @@ func (p *PostgresWrapper) GetUsersSegments(ctx context.Context, userID int) (mod
 	}
 
 	rows, err := tx.QueryContext(ctx,
-		"SELECT slug FROM users_segments WHERE user_id = $1 AND (expiration_date IS NULL OR expiration_date > NOW())",
+		"SELECT users_segments.slug FROM users_segments LEFT JOIN segments ON segments.slug = users_segments.slug WHERE user_id = $1 AND (expiration_date IS NULL OR expiration_date > NOW()) AND segments.is_deleted = false",
 		userID)
 	if err != nil {
 		rollErr := tx.Rollback()
