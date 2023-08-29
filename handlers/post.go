@@ -10,6 +10,19 @@ import (
 	"github.com/peyuaa/segmentify/models"
 )
 
+// swagger:route POST /segments segments createSegment
+// Creates a new segment in the database
+//
+// Produces:
+// - application/json
+//
+// Responses:
+// 	201: createSegmentResponse
+// 	400: errorResponse
+// 	409: errorResponse
+// 	500: errorResponse
+
+// CreateSegment creates a new segment in the database
 func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 	// fetch the segment from the context
@@ -75,6 +88,18 @@ func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 		s.l.Error("Unable to serialize segment", "error", err)
 	}
 }
+
+// swagger:route POST /segments/users segments changeUsersSegments
+// Add or remove segments from a user
+//
+// Produces:
+// - application/json
+//
+// Responses:
+// 	200: activeSegmentsResponse
+// 	400: errorResponse
+// 	404: errorResponse
+// 	500: errorResponse
 
 // ChangeUsersSegments changes the segments of a user
 // First it checks that all segments exist
