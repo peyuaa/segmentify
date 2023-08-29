@@ -104,8 +104,20 @@ func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 // swagger:route POST /segments/users segments changeUsersSegments
 // Add or remove segments from a user
 //
+// Consumes:
+// - application/json
+//
 // Produces:
 // - application/json
+//
+// Schemes: http
+//
+// Parameters:
+//	+ name: userSegments
+// 	  in: body
+// 	  description: segments to add and remove from the user
+// 	  required: true
+// 	  type: userSegmentsRequest
 //
 // Responses:
 // 	200: activeSegmentsResponse
@@ -122,7 +134,7 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 	rw.Header().Add("Content-Type", "application/json")
 
 	// fetch the user segments from the context
-	userSegments := r.Context().Value(KeyUserSegments{}).(models.UserSegments)
+	userSegments := r.Context().Value(KeyUserSegments{}).(models.UserSegmentsRequest)
 
 	// add the segments to the user
 	err := s.d.ChangeUserSegments(r.Context(), userSegments)
