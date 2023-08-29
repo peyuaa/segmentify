@@ -3,11 +3,26 @@ package data
 import (
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"os"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/peyuaa/segmentify/models"
+)
+
+const (
+	// history/userID/startDate/endDate
+	historyDirTemplate = "history/%v/%v/%v"
+
+	historyFileName = "history.csv"
+
+	operationAdd    = "add"
+	operationRemove = "remove"
 )
 
 func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSegments) error {
@@ -122,4 +137,92 @@ func (s *SegmentifyDB) GetUsersSegments(ctx context.Context, userID int) (models
 	}
 
 	return segments, nil
+}
+
+func (s *SegmentifyDB) GetUserHistory(ctx context.Context, userID int, from, to time.Time) (filename string, err error) {
+	history, err := s.db.GetUsersHistory(ctx, userID, from, to)
+
+	switch {
+	case err == nil:
+		if len(history) == 0 {
+			return filename, ErrNoUserHistoryData
+		}
+	case errors.Is(err, sql.ErrNoRows):
+		return filename, ErrNoUserHistoryData
+	default:
+		return filename, fmt.Errorf("unable to get user's segments history: %w", err)
+	}
+
+	preparedHistory := s.prepareHistoryEntries(history, from, to)
+
+	return s.writeCSV(preparedHistory, from, to)
+}
+
+func (s *SegmentifyDB) prepareHistoryEntries(db models.UserSegmentsHistoryDB, from, to time.Time) models.UserHistory {
+	// len(db) is a minimum capacity of history, because every entry could be added and removed in the same period of time
+	history := make(models.UserHistory, 0, len(db))
+
+	for _, entry := range db {
+		if entry.DateAdded.After(from) && entry.DateAdded.Before(to) {
+			history = append(history, models.UserHistoryEntry{
+				ID:        entry.ID,
+				Slug:      entry.Slug,
+				Operation: operationAdd,
+				Date:      entry.DateAdded,
+			})
+		}
+		if entry.DateRemoved.Valid && entry.DateRemoved.Time.After(from) && entry.DateRemoved.Time.Before(to) {
+			history = append(history, models.UserHistoryEntry{
+				ID:        entry.ID,
+				Slug:      entry.Slug,
+				Operation: operationRemove,
+				Date:      entry.DateRemoved.Time,
+			})
+		}
+	}
+
+	// sort history by date ascending
+	sort.Sort(history)
+
+	return history
+}
+
+// writeCSV writes user's segments history to csv file
+// and returns the path to the file and the error if any
+func (s *SegmentifyDB) writeCSV(history models.UserHistory, from, to time.Time) (path string, err error) {
+	// history[0] exists because we checked that len(history) > 0
+	userID := history[0].ID
+
+	// prepare records
+	records := make([][]string, len(history))
+	for i, segment := range history {
+		records[i] = []string{
+			strconv.Itoa(segment.ID),
+			segment.Slug,
+			segment.Operation,
+			segment.Date.Format(time.RFC3339),
+		}
+	}
+
+	dir := fmt.Sprintf(historyDirTemplate,
+		userID, from.Format("2006-01-02"), to.Format("2006-01-02"))
+
+	err = os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return path, fmt.Errorf("unable to create directory: %w", err)
+	}
+
+	// create csv file in directory "history/userID/startDate/endDate/history.csv"
+	file, err := os.Create(dir + "/" + historyFileName)
+	if err != nil {
+		return path, fmt.Errorf("unable to create csv file: %w", err)
+	}
+
+	// write csv file
+	err = csv.NewWriter(file).WriteAll(records)
+	if err != nil {
+		return path, fmt.Errorf("unable to write to csv file: %w", err)
+	}
+
+	return file.Name(), nil
 }

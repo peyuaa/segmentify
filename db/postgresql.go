@@ -326,3 +326,29 @@ func (p *PostgresWrapper) GetUsersSegments(ctx context.Context, userID int) (mod
 
 	return segments, nil
 }
+
+func (p *PostgresWrapper) GetUsersHistory(ctx context.Context, userID int, from, to time.Time) (models.UserSegmentsHistoryDB, error) {
+	rows, err := p.db.QueryContext(ctx, "SELECT user_id, segment_slug, date_added, date_removed FROM user_segment_history WHERE user_id = $1 AND ((date_added >= $2 AND date_added <= $3) OR (date_removed >= $2 AND date_removed <= $3))", userID, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			p.l.Error("Unable to close rows", "error", err)
+		}
+	}()
+
+	var history models.UserSegmentsHistoryDB
+	for rows.Next() {
+		var h models.UserSegmentHistoryDB
+		if err := rows.Scan(&h.ID, &h.Slug, &h.DateAdded, &h.DateRemoved); err != nil {
+			return nil, fmt.Errorf("unable to scan row: %w", err)
+		}
+		history = append(history, h)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error while iterating over rows: %w", err)
+	}
+	return history, nil
+}

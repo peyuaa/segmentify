@@ -1,6 +1,9 @@
 package models
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+)
 
 type SegmentDB struct {
 	// segment's id
@@ -39,3 +42,19 @@ type UserSegmentsDB struct {
 	// remove the segments from the user
 	RemoveSegments []SegmentDeleteDB
 }
+
+type UserSegmentHistoryDB struct {
+	// user's id
+	ID int
+
+	// segment's slug
+	Slug string
+
+	// date added
+	DateAdded time.Time
+
+	// date removed
+	DateRemoved sql.NullTime
+}
+
+type UserSegmentsHistoryDB []UserSegmentHistoryDB
