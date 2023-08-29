@@ -51,3 +51,10 @@ type segmentErrorResponse struct {
 	// in: body
 	Body GenericError
 }
+
+// swagger:response userHistoryResponse
+type UserHistoryResponse struct {
+	// link to csv file with user's segments history for specified period
+	// in: body
+	Body models.UserHistoryResponse
+}

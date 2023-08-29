@@ -92,6 +92,19 @@ func (s *Segments) GetBySlug(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// swagger:route GET /segments/users/{id} segments getActiveSegmentsForUser
+// Returns a list of active segments for the user
+//
+// Produces:
+// - application/json
+//
+// Responses:
+// 	200: segmentsResponse
+//	400: errorResponse
+// 	404: errorResponse
+// 	500: errorResponse
+
+// GetActiveSegments returns the active segments for the user
 func (s *Segments) GetActiveSegments(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
@@ -117,6 +130,19 @@ func (s *Segments) GetActiveSegments(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// swagger:route GET /segments/users/{id}/history segments getUserHistory
+// Returns a link to the user's segments history for the specified period
+//
+// Produces:
+// - application/json
+//
+// Responses:
+// 	200: userHistoryResponse
+// 	400: errorResponse
+//	404: errorResponse
+// 	500: errorResponse
+
+// UserHistory returns the user's segments history for the specified period
 func (s *Segments) UserHistory(rw http.ResponseWriter, r *http.Request) {
 	userID, err := s.getUserId(r)
 	if err != nil {
