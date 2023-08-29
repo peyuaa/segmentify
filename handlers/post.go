@@ -121,7 +121,7 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 
 	err = data.ToJSON(response, rw)
 	if err != nil {
-		s.writeInternalServerError(rw, "unabel to serialize models.ActiveSegmentsResponse", err)
+		s.writeInternalServerError(rw, "unable to serialize models.ActiveSegmentsResponse", err)
 		return
 	}
 }

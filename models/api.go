@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // Segment defines the structure for an API segment
 type Segment struct {
 	// the id for the segment
@@ -52,4 +54,37 @@ type UserSegments struct {
 
 	// remove the segments from the user
 	RemoveSegments []SegmentDelete `json:"remove" validate:"dive"`
+}
+
+type UserHistoryResponse struct {
+	// link to csv file with user's segments history for specified period
+	Link string `json:"link"`
+}
+
+type UserHistoryEntry struct {
+	// userID
+	ID int
+
+	// segment's slug
+	Slug string
+
+	// operation type
+	Operation string
+
+	// date
+	Date time.Time
+}
+
+type UserHistory []UserHistoryEntry
+
+func (u UserHistory) Len() int {
+	return len(u)
+}
+
+func (u UserHistory) Less(i, j int) bool {
+	return u[i].Date.Before(u[j].Date)
+}
+
+func (u UserHistory) Swap(i, j int) {
+	u[i], u[j] = u[j], u[i]
 }

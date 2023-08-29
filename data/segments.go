@@ -27,6 +27,10 @@ var (
 
 	// ErrNoUserData is an error returned when there is no user data about segments for given userID
 	ErrNoUserData = fmt.Errorf("no user data about segments for given userID")
+
+	// ErrNoUserHistoryData is an error returned when there is no user history data about segments for given userID
+	// for specified period.
+	ErrNoUserHistoryData = fmt.Errorf("no user history data about segments for given userID")
 )
 
 type SegmentifyDB struct {

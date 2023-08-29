@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/peyuaa/segmentify/data"
+	"github.com/peyuaa/segmentify/models"
 
 	"github.com/gorilla/mux"
 )
@@ -91,6 +94,46 @@ func (s *Segments) GetActiveSegments(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Segments) UserHistory(rw http.ResponseWriter, r *http.Request) {
+	userID, err := s.getUserId(r)
+	if err != nil {
+		s.writeGenericError(rw, http.StatusBadRequest, "", err)
+		return
+	}
+
+	from, to, err := s.getFromTo(r)
+	if err != nil {
+		s.writeGenericError(rw, http.StatusBadRequest, "unable to parse time", err)
+		return
+	}
+
+	file, err := s.d.GetUserHistory(r.Context(), userID, from, to)
+	if err != nil {
+		if errors.Is(err, data.ErrNoUserHistoryData) {
+			s.writeGenericError(rw, http.StatusNotFound, "userID="+strconv.Itoa(userID), err)
+			return
+		}
+		s.writeInternalServerError(rw, "unable to get user's segments history", err)
+		return
+	}
+
+	// create url for the link
+	u := &url.URL{
+		Scheme: "http",
+		Host:   r.Host,
+		Path:   file,
+	}
+
+	history := models.UserHistoryResponse{
+		Link: u.String(),
+	}
+
+	err = data.ToJSON(history, rw)
+	if err != nil {
+		s.writeInternalServerError(rw, "unable to marshal json", err)
+	}
+}
+
 // getSlug returns the slug from the url
 func (s *Segments) getSlug(r *http.Request) string {
 	vars := mux.Vars(r)
@@ -111,4 +154,36 @@ func (s *Segments) getUserId(r *http.Request) (int, error) {
 	}
 
 	return userID, nil
+}
+
+func (s *Segments) getFromTo(r *http.Request) (from, to time.Time, err error) {
+	fromStr := r.URL.Query().Get("from")
+	if fromStr == "" {
+		return from, to, fmt.Errorf("from is empty")
+	}
+
+	from, err = time.Parse(time.DateOnly, fromStr)
+	if err != nil {
+		return from, to, fmt.Errorf("unable to parse from: %w", err)
+	}
+
+	toStr := r.URL.Query().Get("to")
+	if toStr == "" {
+		return from, to, fmt.Errorf("to is empty")
+	}
+
+	to, err = time.Parse(time.DateOnly, toStr)
+	if err != nil {
+		return from, to, fmt.Errorf("unable to parse to: %w", err)
+	}
+
+	// set to time to the end of the day
+	to = to.Add(time.Hour*time.Duration(23) + time.Minute*time.Duration(59) + time.Second*time.Duration(59))
+
+	// check if from is before to
+	if from.After(to) {
+		return from, to, fmt.Errorf("from is after to")
+	}
+
+	return from, to, nil
 }
