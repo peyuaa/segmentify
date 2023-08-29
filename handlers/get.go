@@ -19,7 +19,7 @@ const (
 )
 
 // swagger:route GET /segments segments listSegments
-// Returns a list of segments from the database
+// Returns a list of all segments from the database. Deleted segments are included.
 //
 // Produces:
 // - application/json
