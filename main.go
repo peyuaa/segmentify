@@ -13,6 +13,7 @@ import (
 	"github.com/peyuaa/segmentify/handlers"
 
 	"github.com/charmbracelet/log"
+	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -88,10 +89,18 @@ func main() {
 	// serve directory with user history files
 	getR.PathPrefix("/history/").Handler(http.StripPrefix("/history/", http.FileServer(http.Dir("history"))))
 
-	getR.HandleFunc("/segments", sh.Get)
+	getR.HandleFunc("/segments", sh.GetSegments)
 	getR.HandleFunc("/segments/{slug:[a-zA-Z_0-9]+}", sh.GetBySlug)
 	getR.HandleFunc("/segments/users/{id:[0-9]+}", sh.GetActiveSegments)
 	getR.HandleFunc("/segments/users/{id:[0-9]+}/history", sh.UserHistory)
+
+	// handlers for documentation
+	opts := middleware.RedocOpts{
+		SpecURL: "/swagger.yaml",
+	}
+	dh := middleware.Redoc(opts, nil)
+	getR.Handle("/docs", dh)
+	getR.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	deleteR := sm.Methods(http.MethodDelete).Subrouter()
 	deleteR.HandleFunc("/segments/{slug:[a-zA-Z_0-9]+}", sh.Delete)

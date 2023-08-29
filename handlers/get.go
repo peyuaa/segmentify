@@ -18,7 +18,18 @@ const (
 	MaxUserID = 2147483647
 )
 
-func (s *Segments) Get(rw http.ResponseWriter, r *http.Request) {
+// swagger:route GET /segments segments listSegments
+// Returns a list of segments from the database
+//
+// Produces:
+// - application/json
+//
+// Responses:
+// 	200: segmentsResponse
+// 	500: errorResponse
+
+// GetSegments returns the active segments from the database
+func (s *Segments) GetSegments(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
 	segments, err := s.d.GetSegments(r.Context())
@@ -38,6 +49,18 @@ func (s *Segments) Get(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//swagger:route GET /segments/{Slug} segments getSegmentBySlug
+// Returns a segment from the database by slug
+//
+// Produces:
+// - application/json
+//
+// Responses:
+// 	200: segmentResponse
+// 	404: errorResponse
+// 	500: errorResponse
+
+// GetBySlug returns a segment from the database by slug
 func (s *Segments) GetBySlug(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 
