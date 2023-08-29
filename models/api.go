@@ -14,6 +14,18 @@ type Segment struct {
 	IsDeleted bool `json:"is_deleted"`
 }
 
+// CreateSegmentRequest defines the structure for an API request for adding segments
+// swagger:model createSegmentRequest
+type CreateSegmentRequest struct {
+	// the segment's slug
+	//
+	// required: true
+	// min length: 5
+	// max length: 50
+	// example: AVITO_DISCOUNT_30
+	Slug string `json:"slug" validate:"required,min=5,max=50"`
+}
+
 // ActiveSegment defines the structure of Segment for an API response for active user's segments
 type ActiveSegment struct {
 	// the segment's slug
