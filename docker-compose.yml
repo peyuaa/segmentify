@@ -8,6 +8,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 192.168.0.45
+    environment:
+      - TZ=Europe/Moscow
   segmentify:
     build: .
     depends_on:
@@ -17,6 +19,8 @@ services:
     networks:
       mynetwork:
         ipv4_address: 192.168.0.46
+    environment:
+      - TZ=Europe/Moscow
 
 networks:
   mynetwork:
