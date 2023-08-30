@@ -7,6 +7,16 @@ import (
 	"github.com/peyuaa/segmentify/data"
 )
 
+// swagger:route DELETE /segments/{Slug} segments deleteSegment
+// Deletes a segment from the database
+// responses:
+// 	204: noContentResponse
+// 	404: errorResponse
+// 	500: errorResponse
+
+// Delete handles DELETE requests and mark segment as deleted in the database
+// The reason why we don't delete the segment from the database is that we want to keep
+// the history of the already used segments
 func (s *Segments) Delete(rw http.ResponseWriter, r *http.Request) {
 	slug := s.getSlug(r)
 

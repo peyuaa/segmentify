@@ -45,7 +45,7 @@ func New(l *log.Logger, db *db.PostgresWrapper) *SegmentifyDB {
 	}
 }
 
-func (s *SegmentifyDB) Add(ctx context.Context, segment models.Segment) error {
+func (s *SegmentifyDB) Add(ctx context.Context, segment models.CreateSegmentRequest) error {
 	exists, err := s.db.IsSegmentExists(ctx, segment.Slug)
 	if err != nil {
 		return fmt.Errorf("unable to check segment existence: %w", err)

@@ -10,7 +10,7 @@ import (
 
 func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		segment := models.Segment{}
+		segment := models.CreateSegmentRequest{}
 
 		err := data.FromJSON(&segment, r.Body)
 		if err != nil {
@@ -46,7 +46,7 @@ func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 
 func (s *Segments) MiddlewareValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		user := models.UserSegments{}
+		user := models.UserSegmentsRequest{}
 
 		err := data.FromJSON(&user, r.Body)
 		if err != nil {

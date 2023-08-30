@@ -10,10 +10,35 @@ import (
 	"github.com/peyuaa/segmentify/models"
 )
 
+// swagger:route POST /segments segments createSegment
+// Creates a new segment in the database
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+//
+// Schemes: http
+//
+// Parameters:
+//	+ name: segment
+// 	  in: body
+// 	  description: slug of the segment
+// 	  required: true
+// 	  type: createSegmentRequest
+//
+// Responses:
+// 	201: createSegmentResponse
+// 	400: errorResponse
+// 	409: errorResponse
+// 	500: errorResponse
+
+// CreateSegment creates a new segment in the database
 func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add("Content-Type", "application/json")
 	// fetch the segment from the context
-	segment := r.Context().Value(KeySegment{}).(models.Segment)
+	segment := r.Context().Value(KeySegment{}).(models.CreateSegmentRequest)
 
 	s.l.Debug("Inserting segment", "segment", segment)
 
@@ -39,7 +64,7 @@ func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// retrieve segment to include the result of the operation in the response body
-	segment, err = s.d.GetSegmentBySlug(r.Context(), segment.Slug)
+	createdSegment, err := s.d.GetSegmentBySlug(r.Context(), segment.Slug)
 
 	switch {
 	case err == nil:
@@ -65,16 +90,40 @@ func (s *Segments) CreateSegment(rw http.ResponseWriter, r *http.Request) {
 	u := &url.URL{
 		Scheme: "http",
 		Host:   r.Host,
-		Path:   fmt.Sprintf("/segments/%s", segment.Slug),
+		Path:   fmt.Sprintf("/segments/%s", createdSegment.Slug),
 	}
 	rw.Header().Add("Location", u.String())
 
 	rw.WriteHeader(http.StatusCreated)
-	err = data.ToJSON(segment, rw)
+	err = data.ToJSON(createdSegment, rw)
 	if err != nil {
 		s.l.Error("Unable to serialize segment", "error", err)
 	}
 }
+
+// swagger:route POST /segments/users segments changeUsersSegments
+// Add or remove segments from a user
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+//
+// Schemes: http
+//
+// Parameters:
+//	+ name: userSegments
+// 	  in: body
+// 	  description: segments to add and remove from the user
+// 	  required: true
+// 	  type: userSegmentsRequest
+//
+// Responses:
+// 	200: activeSegmentsResponse
+// 	400: errorResponse
+// 	404: errorResponse
+// 	500: errorResponse
 
 // ChangeUsersSegments changes the segments of a user
 // First it checks that all segments exist
@@ -85,7 +134,7 @@ func (s *Segments) ChangeUsersSegments(rw http.ResponseWriter, r *http.Request) 
 	rw.Header().Add("Content-Type", "application/json")
 
 	// fetch the user segments from the context
-	userSegments := r.Context().Value(KeyUserSegments{}).(models.UserSegments)
+	userSegments := r.Context().Value(KeyUserSegments{}).(models.UserSegmentsRequest)
 
 	// add the segments to the user
 	err := s.d.ChangeUserSegments(r.Context(), userSegments)

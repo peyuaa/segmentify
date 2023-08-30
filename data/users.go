@@ -25,7 +25,7 @@ const (
 	operationRemove = "remove"
 )
 
-func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSegments) error {
+func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSegmentsRequest) error {
 	// check if the add segments exists
 	for _, segment := range us.AddSegments {
 		got, err := s.GetSegmentBySlug(ctx, segment.Slug)
