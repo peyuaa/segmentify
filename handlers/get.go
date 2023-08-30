@@ -19,10 +19,12 @@ const (
 )
 
 // swagger:route GET /segments segments listSegments
-// Returns a list of all segments from the database. Deleted segments are included.
+// Returns a list of all segments from the database, deleted segments are included
 //
 // Produces:
 // - application/json
+//
+// Schemes: http
 //
 // Responses:
 // 	200: segmentsResponse
@@ -49,11 +51,13 @@ func (s *Segments) GetSegments(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//swagger:route GET /segments/{Slug} segments getSegmentBySlug
+// swagger:route GET /segments/{Slug} segments getSegmentBySlug
 // Returns a segment from the database by slug
 //
 // Produces:
 // - application/json
+//
+// Schemes: http
 //
 // Responses:
 // 	200: segmentResponse
@@ -98,6 +102,8 @@ func (s *Segments) GetBySlug(rw http.ResponseWriter, r *http.Request) {
 // Produces:
 // - application/json
 //
+// Schemes: http
+//
 // Responses:
 // 	200: segmentsResponse
 //	400: errorResponse
@@ -135,6 +141,25 @@ func (s *Segments) GetActiveSegments(rw http.ResponseWriter, r *http.Request) {
 //
 // Produces:
 // - application/json
+//
+// Schemes: http
+//
+// Parameters:
+// 	+ name: id
+// 	  in: path
+// 	  description: user id
+// 	  required: true
+// 	  type: integer
+// 	+ name: from
+// 	  in: query
+// 	  description: start of the period. Format: YYYY-MM-DD
+//	  required: true
+// 	  type: string
+// 	+ name: to
+// 	  in: query
+// 	  description: end of the period. Format: YYYY-MM-DD
+// 	  required: true
+// 	  type: string
 //
 // Responses:
 // 	200: userHistoryResponse

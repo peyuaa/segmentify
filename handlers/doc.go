@@ -76,3 +76,20 @@ type activeSegmentsResponse struct {
 	// in: body
 	Body models.ActiveSegmentsResponse
 }
+
+// swagger:parameters historyFrom
+type historyFromParameterWrapper struct {
+	// The start of the period of the user's history. Format: YYYY-MM-DD
+	// in: query
+	// required: true
+	// example: 2023-08-21
+	From string
+}
+
+// swagger:parameters historyTo
+type historyToParameterWrapper struct {
+	// The end of the period of the user's history. Format: YYYY-MM-DD
+	// in: query
+	// required: true
+	// example: 2023-08-29
+}
