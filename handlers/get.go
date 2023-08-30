@@ -111,6 +111,13 @@ func (s *Segments) GetBySlug(rw http.ResponseWriter, r *http.Request) {
 //
 // Schemes: http
 //
+// Parameters:
+// 	+ name: id
+// 	  in: path
+// 	  description: user id
+// 	  required: true
+// 	  type: integer
+//
 // Responses:
 // 	200: segmentsResponse
 //	400: errorResponse
