@@ -59,6 +59,13 @@ func (s *Segments) GetSegments(rw http.ResponseWriter, r *http.Request) {
 //
 // Schemes: http
 //
+// Parameters:
+// 	+ name: Slug
+// 	  in: path
+// 	  description: slug of the segment
+// 	  required: true
+// 	  type: string
+//
 // Responses:
 // 	200: segmentResponse
 // 	404: errorResponse
