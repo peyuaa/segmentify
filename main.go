@@ -43,6 +43,9 @@ func main() {
 
 	l.Info("Connecting to postgresql database")
 
+	l.Info("Waiting for postgresql database to start")
+	time.Sleep(10 * time.Second)
+
 	// set up the database connection
 	dbConn, err := sql.Open("postgres", dbConnectionString)
 	if err != nil {
