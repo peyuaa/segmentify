@@ -11,11 +11,13 @@ import (
 	"github.com/charmbracelet/log"
 )
 
+// PostgresWrapper is a wrapper for the database
 type PostgresWrapper struct {
 	l  *log.Logger
 	db *sql.DB
 }
 
+// New returns a new PostgresWrapper
 func New(l *log.Logger, db *sql.DB) *PostgresWrapper {
 	return &PostgresWrapper{
 		l:  l,
@@ -52,6 +54,7 @@ func (p *PostgresWrapper) SelectSegments(ctx context.Context) (models.SegmentsDB
 	return segments, nil
 }
 
+// SelectSegmentBySlug returns a segment with given slug from the database
 func (p *PostgresWrapper) SelectSegmentBySlug(ctx context.Context, slug string) (models.SegmentDB, error) {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -111,6 +114,7 @@ func (p *PostgresWrapper) IsSegmentExists(ctx context.Context, slug string) (boo
 	return count > 0, nil
 }
 
+// IsSegmentDeleted checks if segment with given slug is deleted
 func (p *PostgresWrapper) IsSegmentDeleted(ctx context.Context, slug string) (bool, error) {
 	var isDeleted bool
 	err := p.db.QueryRowContext(ctx, "SELECT is_deleted FROM segments WHERE slug = $1", slug).Scan(&isDeleted)
@@ -121,6 +125,7 @@ func (p *PostgresWrapper) IsSegmentDeleted(ctx context.Context, slug string) (bo
 	return isDeleted, nil
 }
 
+// DeleteSegment deletes segment with given slug from the database
 func (p *PostgresWrapper) DeleteSegment(ctx context.Context, slug string) error {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -217,6 +222,7 @@ func (p *PostgresWrapper) AddSegmentsToUser(ctx context.Context, tx *sql.Tx, use
 	return nil
 }
 
+// AddSegmentInUsersHistory adds segments to user history using transaction tx
 func (p *PostgresWrapper) AddSegmentInUsersHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentAddDB, time time.Time) error {
 	stmt, err := tx.PrepareContext(ctx, "INSERT INTO user_segment_history (user_id, segment_slug, date_added) VALUES ($1, $2, $3)")
 	if err != nil {
@@ -239,6 +245,7 @@ func (p *PostgresWrapper) AddSegmentInUsersHistory(ctx context.Context, tx *sql.
 	return nil
 }
 
+// AddSegmentsRemoveDateInUserHistory sets date_removed to time for segments in user history using transaction tx
 func (p *PostgresWrapper) AddSegmentsRemoveDateInUserHistory(ctx context.Context, tx *sql.Tx, userID int, segments []models.SegmentDeleteDB, time time.Time) error {
 	stmt, err := tx.PrepareContext(ctx, "UPDATE user_segment_history SET date_removed = $1 WHERE user_id = $2 AND segment_slug = $3 AND date_removed IS NULL")
 	if err != nil {
@@ -327,6 +334,7 @@ func (p *PostgresWrapper) GetUsersSegments(ctx context.Context, userID int) (mod
 	return segments, nil
 }
 
+// GetUsersHistory returns user history for given period
 func (p *PostgresWrapper) GetUsersHistory(ctx context.Context, userID int, from, to time.Time) (models.UserSegmentsHistoryDB, error) {
 	rows, err := p.db.QueryContext(ctx, "SELECT user_id, segment_slug, date_added, date_removed FROM user_segment_history WHERE user_id = $1 AND ((date_added >= $2 AND date_added <= $3) OR (date_removed >= $2 AND date_removed <= $3))", userID, from, to)
 	if err != nil {

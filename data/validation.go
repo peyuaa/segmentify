@@ -36,7 +36,7 @@ func (v ValidationErrors) Errors() []string {
 	return errs
 }
 
-// Validation contains
+// Validation wraps the go-playground/validator
 type Validation struct {
 	validate *validator.Validate
 }

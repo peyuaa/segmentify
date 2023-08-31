@@ -8,6 +8,7 @@ import (
 	"github.com/peyuaa/segmentify/models"
 )
 
+// MiddlewareValidateSegment validates the segment in the request and calls next if ok
 func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		segment := models.CreateSegmentRequest{}
@@ -44,6 +45,7 @@ func (s *Segments) MiddlewareValidateSegment(next http.Handler) http.Handler {
 	})
 }
 
+// MiddlewareValidateUser validates the user segments request and calls next if ok
 func (s *Segments) MiddlewareValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		user := models.UserSegmentsRequest{}

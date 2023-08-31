@@ -25,6 +25,7 @@ const (
 	operationRemove = "remove"
 )
 
+// ChangeUserSegments changes user's segments
 func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSegmentsRequest) error {
 	// check if the add segments exists
 	for _, segment := range us.AddSegments {
@@ -115,6 +116,7 @@ func (s *SegmentifyDB) ChangeUserSegments(ctx context.Context, us models.UserSeg
 	return nil
 }
 
+// GetUsersSegments returns user's segments
 func (s *SegmentifyDB) GetUsersSegments(ctx context.Context, userID int) (models.ActiveSegments, error) {
 	segmentsDB, err := s.db.GetUsersSegments(ctx, userID)
 	if err != nil {
@@ -139,6 +141,7 @@ func (s *SegmentifyDB) GetUsersSegments(ctx context.Context, userID int) (models
 	return segments, nil
 }
 
+// GetUserHistory returns user's segments history
 func (s *SegmentifyDB) GetUserHistory(ctx context.Context, userID int, from, to time.Time) (filename string, err error) {
 	history, err := s.db.GetUsersHistory(ctx, userID, from, to)
 

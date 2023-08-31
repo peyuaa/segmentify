@@ -90,11 +90,13 @@ type UserSegmentsRequest struct {
 	RemoveSegments []SegmentDelete `json:"remove" validate:"dive"`
 }
 
+// UserHistoryResponse defines the structure for an API response for getting user's segments history
 type UserHistoryResponse struct {
 	// link to csv file with user's segments history for specified period
 	Link string `json:"link"`
 }
 
+// UserHistoryEntry defines user's segment history entry
 type UserHistoryEntry struct {
 	// userID
 	ID int
@@ -109,16 +111,21 @@ type UserHistoryEntry struct {
 	Date time.Time
 }
 
+// UserHistory defines a slice of UserHistoryEntry
+// Implements sort.Interface
 type UserHistory []UserHistoryEntry
 
+// Len returns the length of UserHistory
 func (u UserHistory) Len() int {
 	return len(u)
 }
 
+// Less returns true if the date of the first entry is before the date of the second entry
 func (u UserHistory) Less(i, j int) bool {
 	return u[i].Date.Before(u[j].Date)
 }
 
+// Swap swaps the entries
 func (u UserHistory) Swap(i, j int) {
 	u[i], u[j] = u[j], u[i]
 }

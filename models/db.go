@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// SegmentDB defines the structure for a segment in the database
 type SegmentDB struct {
 	// segment's id
 	ID int
@@ -19,6 +20,7 @@ type SegmentDB struct {
 // SegmentsDB defines a slice of SegmentDB
 type SegmentsDB []SegmentDB
 
+// SegmentAddDB defines the structure for adding a segment to the database
 type SegmentAddDB struct {
 	// the segment's slug
 	Slug string
@@ -27,11 +29,13 @@ type SegmentAddDB struct {
 	Expired sql.NullString
 }
 
+// SegmentDeleteDB defines the structure for deleting a segment from the database
 type SegmentDeleteDB struct {
 	// the segment's slug
 	Slug string
 }
 
+// UserSegmentsDB defines the structure for adding and removing segments from the user
 type UserSegmentsDB struct {
 	// user's id
 	ID int
@@ -43,6 +47,7 @@ type UserSegmentsDB struct {
 	RemoveSegments []SegmentDeleteDB
 }
 
+// UserSegmentHistoryDB defines the structure for a segment in the database
 type UserSegmentHistoryDB struct {
 	// user's id
 	ID int
@@ -57,4 +62,5 @@ type UserSegmentHistoryDB struct {
 	DateRemoved sql.NullTime
 }
 
+// UserSegmentsHistoryDB defines a slice of UserSegmentHistoryDB
 type UserSegmentsHistoryDB []UserSegmentHistoryDB
