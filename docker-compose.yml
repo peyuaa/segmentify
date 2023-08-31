@@ -1,0 +1,30 @@
+services:
+  postgresql:
+    build:
+        context: ./db
+        dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.0.45
+    environment:
+      - TZ=Europe/Moscow
+  segmentify:
+    build: .
+    depends_on:
+      - postgresql
+    ports:
+      - "9090:9090"
+    networks:
+      mynetwork:
+        ipv4_address: 192.168.0.46
+    environment:
+      - TZ=Europe/Moscow
+
+networks:
+  mynetwork:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/16
