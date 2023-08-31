@@ -2,6 +2,8 @@
 
 Package `segmentify` provides a service for dynamic user segmentation.
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/peyuaa/segmentify.svg)](https://pkg.go.dev/github.com/peyuaa/segmentify)
+
 # How to start service
 
 ## Docker (recommended, everything is set up)
