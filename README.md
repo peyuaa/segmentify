@@ -11,6 +11,8 @@ Package `segmentify` provides a service for dynamic user segmentation.
 docker-compose up
 ```
 
+By default, service is available at `http://localhost:9090`.
+
 ## Manually (not recommended)
 1) You need to have a running PostgreSQL instance. Init script is located in `./db/init.sql`.
 Service uses environment variable [DB_CONNECTION_STRING](https://pkg.go.dev/github.com/lib/pq#hdr-Connection_String_Parameters) to connect to the database.
