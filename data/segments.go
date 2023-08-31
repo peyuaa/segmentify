@@ -33,11 +33,13 @@ var (
 	ErrNoUserHistoryData = fmt.Errorf("no user history data about segments for given userID")
 )
 
+// SegmentifyDB is a service that works with segments in the database
 type SegmentifyDB struct {
 	l  *log.Logger
 	db *db.PostgresWrapper
 }
 
+// New creates a new SegmentifyDB service
 func New(l *log.Logger, db *db.PostgresWrapper) *SegmentifyDB {
 	return &SegmentifyDB{
 		l:  l,
@@ -45,6 +47,7 @@ func New(l *log.Logger, db *db.PostgresWrapper) *SegmentifyDB {
 	}
 }
 
+// Add adds a new segment to the database
 func (s *SegmentifyDB) Add(ctx context.Context, segment models.CreateSegmentRequest) error {
 	exists, err := s.db.IsSegmentExists(ctx, segment.Slug)
 	if err != nil {
@@ -62,6 +65,7 @@ func (s *SegmentifyDB) Add(ctx context.Context, segment models.CreateSegmentRequ
 	return nil
 }
 
+// GetSegments returns all segments from the database
 func (s *SegmentifyDB) GetSegments(ctx context.Context) (models.Segments, error) {
 	segmentsDB, err := s.db.SelectSegments(ctx)
 	if err != nil {
@@ -76,6 +80,7 @@ func (s *SegmentifyDB) GetSegments(ctx context.Context) (models.Segments, error)
 	return segments, nil
 }
 
+// GetSegmentBySlug returns a segment from the database by slug
 func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (models.Segment, error) {
 	segmentDB, err := s.db.SelectSegmentBySlug(ctx, slug)
 	if err != nil {
@@ -90,6 +95,7 @@ func (s *SegmentifyDB) GetSegmentBySlug(ctx context.Context, slug string) (model
 	return segment, nil
 }
 
+// Delete deletes a segment from the database
 func (s *SegmentifyDB) Delete(ctx context.Context, slug string) error {
 	isDeleted, err := s.db.IsSegmentDeleted(ctx, slug)
 	if err != nil {
