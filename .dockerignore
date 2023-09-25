@@ -1,0 +1,14 @@
+.vscode
+.idea
+db/Dockerfile
+db/init.sql
+db/.dockerignore
+history
+.dockerignore
+.gitignore
+docker-compose.yml
+Dockerfile
+LICENSE
+Makefile
+README.md
+swagger.yaml

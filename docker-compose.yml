@@ -7,7 +7,6 @@ services:
       - "5432:5432"
     networks:
       mynetwork:
-        ipv4_address: 192.168.0.45
     environment:
       - TZ=Europe/Moscow
   segmentify:
@@ -18,13 +17,10 @@ services:
       - "9090:9090"
     networks:
       mynetwork:
-        ipv4_address: 192.168.0.46
     environment:
       - TZ=Europe/Moscow
+      - DB_CONNECTION_STRING=user=postgres dbname=postgres host=host.docker.internal port=5432 sslmode=disable
 
 networks:
   mynetwork:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.0.0/16

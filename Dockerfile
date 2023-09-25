@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.21.0-alpine
+FROM golang:1.21.1-alpine AS build
 
 WORKDIR /usr/src/app
 
@@ -16,7 +16,9 @@ RUN go build -v -o /usr/local/bin/segmentify
 # generate swagger file
 RUN swagger generate spec -o ./swagger.yaml --scan-models
 
-# Set environment variables
-ENV DB_CONNECTION_STRING user=postgres dbname=postgres host=192.168.0.1 port=5432 sslmode=disable
+FROM scratch
 
-CMD ["segmentify"]
+COPY --from=build /usr/src/app/swagger.yaml /swagger.yaml
+COPY --from=build /usr/local/bin/segmentify /segmentify
+
+ENTRYPOINT ["/segmentify"]
