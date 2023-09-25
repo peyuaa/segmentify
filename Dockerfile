@@ -18,9 +18,6 @@ RUN swagger generate spec -o ./swagger.yaml --scan-models
 
 FROM scratch
 
-# Set environment variables
-ENV DB_CONNECTION_STRING user=postgres dbname=postgres host=192.168.0.1 port=5432 sslmode=disable
-
 COPY --from=build /usr/src/app/swagger.yaml /swagger.yaml
 COPY --from=build /usr/local/bin/segmentify /segmentify
 
