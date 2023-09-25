@@ -2,6 +2,7 @@
 .idea
 db/Dockerfile
 db/init.sql
+db/.dockerignore
 history
 .dockerignore
 .gitignore
