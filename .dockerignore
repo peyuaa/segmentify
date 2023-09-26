@@ -1,11 +1,12 @@
 .vscode
 .idea
+.dockerignore
+.gitignore
+.git
 db/Dockerfile
 db/init.sql
 db/.dockerignore
 history
-.dockerignore
-.gitignore
 docker-compose.yml
 Dockerfile
 LICENSE
