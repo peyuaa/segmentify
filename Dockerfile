@@ -16,9 +16,12 @@ RUN go build -v -o /usr/local/bin/segmentify
 # generate swagger file
 RUN swagger generate spec -o ./swagger.yaml --scan-models
 
-FROM scratch
+FROM gcr.io/distroless/static-debian12
 
-COPY --from=build /usr/src/app/swagger.yaml /swagger.yaml
-COPY --from=build /usr/local/bin/segmentify /segmentify
+WORKDIR /home/nonroot/
 
-ENTRYPOINT ["/segmentify"]
+USER nonroot:nonroot
+
+COPY --from=build /usr/src/app/swagger.yaml /usr/local/bin/segmentify ./
+
+ENTRYPOINT ["./segmentify"]
